@@ -29,7 +29,11 @@ export class AchievementPopup {
 
   next() {
     const ach = this.queue.shift();
-    if (!ach) { this.busy = false; return; }
+    if (!ach) {
+      this.busy = false;
+      if (this.onDrained) this.onDrained();
+      return;
+    }
     this.busy = true;
     this.show(ach);
   }

@@ -3,6 +3,7 @@ import { FEED_CARDS } from './data.js';
 import { Tracker } from './tracker.js';
 import { AchievementPopup } from './popup.js';
 import { Gallery } from './gallery.js';
+import { PersonaCard } from './persona.js';
 
 // -------- 工具 --------
 const $ = sel => document.querySelector(sel);
@@ -69,13 +70,31 @@ function startClock() {
 // -------- 主流程 --------
 async function main() {
   const tracker = new Tracker();
-  const popup = new AchievementPopup($('#popupRoot'), { sound:false });
+  const popup   = new AchievementPopup($('#popupRoot'), { sound:false });
   const gallery = new Gallery($('#galleryRoot'), tracker);
+  const persona = new PersonaCard($('#personaRoot'));
 
-  // 连接：tracker 解锁事件 -> 弹窗
+  // 人设卡片触发状态
+  const PERSONA_THRESHOLD = 4;
+  let personaShown   = false;
+  let personaPending = false;
+
+  // 队列清空时检查是否弹人设
+  popup.onDrained = () => {
+    if (personaPending && !personaShown) {
+      personaShown = true;
+      personaPending = false;
+      setTimeout(() => persona.show(tracker.state), 600);
+    }
+  };
+
+  // 连接：tracker 解锁事件 -> 弹窗 + 人设检测
   tracker.on(ev => {
-    if (ev.type === 'unlock') popup.enqueue(ev.ach);
-    if (ev.type === 'unlock') updateCounter();
+    if (ev.type !== 'unlock') return;
+    popup.enqueue(ev.ach);
+    updateCounter();
+    const count = Object.keys(tracker.state.unlocked).length;
+    if (!personaShown && count >= PERSONA_THRESHOLD) personaPending = true;
   });
 
   // 顶部计数器
@@ -176,7 +195,7 @@ async function main() {
   updateCounter();
 
   // 把 tracker / popup 挂到全局，方便控制台 debug
-  window.__ias = { tracker, popup, gallery };
+  window.__ias = { tracker, popup, gallery, persona };
 }
 
 // -------- toast --------

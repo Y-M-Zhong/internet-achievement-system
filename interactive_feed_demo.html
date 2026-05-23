@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>互联网生存成就系统 · 信息流 Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#07080d;
+    --ink:#eef1f8;
+    --muted:#8a93a6;
+    --line:rgba(255,255,255,.08);
+    --c-common:#5b8def;
+    --c-rare:#b76bff;
+    --c-mythic:#ffc24b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:radial-gradient(1200px 700px at 50% -10%, #14182a 0%, transparent 60%),
+               radial-gradient(900px 600px at 90% 110%, #1a1226 0%, transparent 55%),
+               var(--bg);
+    color:var(--ink);font-family:"Noto Sans SC",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    min-height:100%;display:flex;flex-direction:column;align-items:center;padding:20px 16px;overflow-x:hidden;
+  }
+  .wrapper{display:flex;gap:24px;align-items:flex-start;max-width:1200px;width:100%;margin:0 auto;flex-wrap:wrap;}
+  
+  /* ===== PHONE / FEED ===== */
+  .phone{position:relative;width:380px;max-width:94vw;aspect-ratio:9/19.2;
+    border-radius:46px;background:#000;
+    box-shadow:0 50px 120px -30px rgba(0,0,0,.9), 0 0 0 2px rgba(255,255,255,.04), inset 0 0 0 6px #0a0a0f;
+    overflow:hidden;flex-shrink:0;}
+  
+  .feed-container{position:absolute;inset:0;display:flex;flex-direction:column;}
+  .top-bar{padding:14px 16px 6px;display:flex;justify-content:space-between;align-items:center;color:#fff;font-size:12px;z-index:2;}
+  .top-tabs{padding:0 16px 12px;display:flex;gap:16px;justify-content:center;font-size:14px;color:rgba(255,255,255,.6);}
+  .top-tabs b{color:#fff;position:relative;}
+  .top-tabs b::after{content:"";position:absolute;left:50%;transform:translateX(-50%);bottom:-8px;width:18px;height:3px;border-radius:3px;background:#fff;}
+  
+  .cards-scroll{flex:1;overflow-y:scroll;overflow-x:hidden;scroll-snap-type:y mandatory;
+    scrollbar-width:none;padding:0;}
+  .cards-scroll::-webkit-scrollbar{display:none;}
+  
+  .card{scroll-snap-align:start;scroll-snap-stop:always;height:100%;
+    display:flex;flex-direction:column;padding:20px 16px;background:linear-gradient(180deg, #0f1620 0%, #0a0d15 100%);
+    border-bottom:1px solid var(--line);position:relative;overflow:hidden;
+    transition:background .3s ease;}
+  .card::before{content:"";position:absolute;top:-50%;left:50%;transform:translateX(-50%);width:200%;height:200%;
+    background:radial-gradient(circle, rgba(255,255,255,.04) 0%, transparent 70%);pointer-events:none;}
+  .card:active{background:linear-gradient(180deg, #111a24 0%, #0b0e17 100%);}
+  
+  .card-header{position:relative;z-index:1;margin-bottom:16px;}
+  .card-type{font-size:11px;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;font-weight:500;margin-bottom:6px;}
+  .card-title{font-size:18px;font-weight:700;color:#fff;line-height:1.2;}
+  
+  .card-body{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;margin-bottom:14px;}
+  .card-desc{font-size:14px;color:#d4dae8;line-height:1.5;margin-bottom:10px;}
+  .card-meta{display:flex;gap:12px;font-size:12px;color:var(--muted);}
+  .card-meta span{display:flex;align-items:center;gap:4px;}
+  
+  .card-icon{font-size:42px;margin:8px 0 12px;}
+  
+  .card-actions{position:relative;z-index:1;display:flex;gap:12px;margin-top:auto;padding-top:12px;border-top:1px solid var(--line);}
+  .btn{flex:1;padding:11px 0;border:1px solid var(--line);background:rgba(255,255,255,.04);
+    border-radius:10px;color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;
+    transition:.15s ease;display:flex;align-items:center;justify-content:center;gap:5px;}
+  .btn:active{background:rgba(255,255,255,.08);color:var(--ink);}
+  .btn.active{color:var(--c-common);border-color:rgba(91,141,239,.4);background:rgba(91,141,239,.1);}
+  
+  .botnav{height:56px;padding:0;border-top:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-around;font-size:12px;color:rgba(255,255,255,.6);z-index:2;}
+  .botnav span{cursor:pointer;transition:.15s;}
+  .botnav span:active{color:#fff;}
+  
+  /* ===== ACHIEVEMENT POPUP ===== */
+  .ach-overlay{position:absolute;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;}
+  .ach-overlay.show{opacity:1;pointer-events:auto;}
+  .ach-scrim{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%, rgba(0,0,0,.2), rgba(0,0,0,.78));
+    opacity:0;transition:opacity .35s ease;}
+  .ach-overlay.show .ach-scrim{opacity:1;}
+  .ach-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;}
+  .ach-overlay.show.fire .ach-flash{animation:flash .55s ease-out;}
+  @keyframes flash{0%{opacity:0}12%{opacity:.02}14%{opacity:0.16}100%{opacity:0}}
+  
+  .ach-banner{position:absolute;top:110px;left:50%;transform:translateX(-50%) translateY(-12px);
+    font-family:"Bebas Neue",sans-serif;letter-spacing:.16em;font-size:15px;opacity:0;white-space:nowrap;}
+  .ach-overlay.show .ach-banner{animation:bannerIn .5s .15s cubic-bezier(.2,.9,.3,1.2) forwards;}
+  @keyframes bannerIn{to{opacity:1;transform:translateX(-50%) translateY(0);}}
+  
+  .ach-card{position:relative;width:300px;max-width:78%;border-radius:22px;padding:22px 20px 18px;
+    border:1px solid;transform:scale(.82) translateY(10px);opacity:0;overflow:hidden;}
+  .ach-overlay.show .ach-card{animation:cardIn .55s .1s cubic-bezier(.18,.9,.25,1.15) forwards;}
+  @keyframes cardIn{to{transform:scale(1) translateY(0);opacity:1;}}
+  .ach-card::after{content:"";position:absolute;top:0;left:-60%;width:50%;height:100%;
+    background:linear-gradient(105deg, transparent, rgba(255,255,255,.28), transparent);transform:skewX(-18deg);}
+  .ach-overlay.show .ach-card::after{animation:shine 1.1s .45s ease-out;}
+  @keyframes shine{0%{left:-60%}100%{left:130%}}
+  
+  .ach-rarity-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .ach-rarity{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:700;letter-spacing:.12em;
+    padding:4px 9px;border-radius:7px;}
+  .ach-note{font-size:11px;color:var(--muted);}
+  
+  .ach-trophy{width:78px;height:78px;margin:2px auto 14px;border-radius:20px;
+    display:flex;align-items:center;justify-content:center;font-size:40px;
+    border:1px solid;box-shadow:0 0 32px -4px;}
+  .ach-overlay.show .ach-trophy{animation:pop .5s .3s cubic-bezier(.2,1.4,.3,1) backwards;}
+  @keyframes pop{0%{transform:scale(0) rotate(-20deg);}70%{transform:scale(1.15) rotate(6deg);}100%{transform:scale(1) rotate(0);}}
+  
+  .ach-title{font-size:21px;font-weight:900;text-align:center;line-height:1.25;margin-bottom:8px;
+    color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.4);}
+  .ach-desc{font-size:13.5px;line-height:1.55;text-align:center;margin-bottom:16px;padding:0 4px;}
+  
+  .ach-stats{display:flex;border-top:1px solid inherit;padding-top:14px;gap:8px;}
+  .ach-stat{flex:1;text-align:center;}
+  .ach-stat .num{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:18px;}
+  .ach-stat .lbl{font-size:10.5px;color:var(--muted);margin-top:3px;letter-spacing:.04em;}
+  .ach-stat + .ach-stat{border-left:1px solid inherit;}
+  
+  .ach-water{margin-top:14px;text-align:center;font-size:10.5px;color:var(--muted);letter-spacing:.04em;}
+  .ach-water b{color:#aab3c6;}
+  
+  .ach-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+  .ap{position:absolute;bottom:-10px;width:6px;height:6px;border-radius:50%;opacity:0;}
+  .ach-overlay.show.fire.ach-mythic .ap{animation:rise var(--d,3s) var(--delay,0s) ease-in infinite;}
+  @keyframes rise{0%{opacity:0;transform:translateY(0) scale(.6);}15%{opacity:.9;}100%{opacity:0;transform:translateY(-420px) scale(1.1);}}
+  
+  /* ===== INFO PANEL ===== */
+  .info{flex:1;min-width:280px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:16px;padding:20px;}
+  .info h3{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--ink);}
+  .info-section{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line);}
+  .info-section:last-child{border:none;margin-bottom:0;padding-bottom:0;}
+  .info-stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;}
+  .info-stat .lbl{color:var(--muted);}
+  .info-stat .val{font-weight:700;color:var(--ink);}
+  
+  .ach-list{max-height:300px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent;}
+  .ach-list::-webkit-scrollbar{width:5px;}
+  .ach-list::-webkit-scrollbar-track{background:transparent;}
+  .ach-list::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px;}
+  
+  .ach-item{padding:10px;margin-bottom:8px;border-radius:10px;border:1px solid var(--line);font-size:12px;
+    background:rgba(255,255,255,.02);transition:.15s;}
+  .ach-item.new{background:rgba(255,194,75,.1);border-color:rgba(255,194,75,.3);animation:pulse 2s ease-out;}
+  @keyframes pulse{0%{box-shadow:0 0 20px rgba(255,194,75,.4);}100%{box-shadow:0 0 0 rgba(255,194,75,0);}}
+  .ach-item.rare{background:rgba(183,107,255,.08);border-color:rgba(183,107,255,.25);}
+  .ach-item.mythic{background:rgba(91,141,239,.08);border-color:rgba(91,141,239,.25);}
+  .ach-item-name{font-weight:700;color:var(--ink);margin-bottom:2px;}
+  .ach-item-rate{color:var(--muted);font-size:11px;}
+  
+  @media(max-width:768px){
+    .wrapper{gap:0;flex-direction:column;}
+    .phone{max-width:100%;}
+    .info{width:100%;}
+  }
+</style>
+</head>
+<body>
+  <div class="wrapper">
+    <!-- ===== PHONE FRAME ===== -->
+    <div class="phone">
+      <div class="feed-container">
+        <div class="top-bar">
+          <span class="status-time">9:41</span>
+          <span>📶 🔋</span>
+        </div>
+        <div class="top-tabs">
+          <span>关注</span>
+          <b>推荐</b>
+          <span>商城</span>
+        </div>
+        
+        <div class="cards-scroll" id="cardsScroll">
+          <!-- cards injected here -->
+        </div>
+        
+        <div class="botnav">
+          <span id="navHome">首页</span>
+          <span>朋友</span>
+          <span style="font-size:24px;">➕</span>
+          <span>消息</span>
+          <span>我</span>
+        </div>
+      </div>
+      
+      <!-- achievement overlay -->
+      <div class="ach-overlay" id="achOverlay">
+        <div class="ach-scrim"></div>
+        <div class="ach-flash"></div>
+        <div class="ach-banner" id="achBanner" style="color:var(--rc);">ACHIEVEMENT UNLOCKED</div>
+        <div class="ach-card" id="achCard">
+          <div class="ach-rarity-row">
+            <span class="ach-rarity" id="achRarity"></span>
+            <span class="ach-note" id="achNote"></span>
+          </div>
+          <div class="ach-trophy" id="achTrophy">🏆</div>
+          <div class="ach-title" id="achTitle"></div>
+          <div class="ach-desc" id="achDesc"></div>
+          <div class="ach-stats">
+            <div class="ach-stat">
+              <div class="num" id="achRate">0%</div>
+              <div class="lbl">全球解锁率</div>
+            </div>
+            <div class="ach-stat">
+              <div class="num" id="achRarityLabel"></div>
+              <div class="lbl">稀有度</div>
+            </div>
+            <div class="ach-stat">
+              <div class="num" id="achTime">刚刚</div>
+              <div class="lbl">解锁于</div>
+            </div>
+          </div>
+          <div class="ach-water">由 <b>互联网生存成就系统</b> 自动颁发</div>
+        </div>
+        <div class="ach-particles" id="achParticles"></div>
+      </div>
+    </div>
+    
+    <!-- ===== INFO PANEL ===== -->
+    <div class="info">
+      <h3>📊 实时监控</h3>
+      <div class="info-section">
+        <div class="info-stat">
+          <span class="lbl">当前卡片</span>
+          <span class="val" id="infoCard">-</span>
+        </div>
+        <div class="info-stat">
+          <span class="lbl">停留时长</span>
+          <span class="val" id="infoDwell">0s</span>
+        </div>
+        <div class="info-stat">
+          <span class="lbl">互动次数</span>
+          <span class="val" id="infoAct">0</span>
+        </div>
+        <div class="info-stat">
+          <span class="lbl">快速切换</span>
+          <span class="val" id="infoSwitch">否</span>
+        </div>
+      </div>
+      
+      <h3>🏆 已解锁成就</h3>
+      <div class="ach-list" id="achList">
+        <div style="color:var(--muted);font-size:12px;padding:12px 0;">刷卡片来解锁成就...</div>
+      </div>
+      
+      <h3>💡 触发提示</h3>
+      <div class="info-section" style="border:none;margin-bottom:0;padding:0;">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+          <strong>试试这些操作：</strong><br>
+          ✓ 快速刷卡片看能否触发《时间管理大师》<br>
+          ✓ 看到购物卡片时不点击，停留>3s<br>
+          ✓ 快速点击"评论"按钮7次试试<br>
+          ✓ 快速切换5个不同类型的卡片
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ===== DATA =====
+  const CARD_DATA = [
+    { id: 'shop1', type: 'shopping', title: '新款手机 99.9 起', desc: '限时秒杀，下单立减 500', icon: '🛒', meta: '商城 · 1 小时前' },
+    { id: 'learn1', type: 'learning', title: '30 秒学会 Python', desc: '万人都在学，看 3 秒视频就掌握编程', icon: '📚', meta: '学习 · 2 小时前' },
+    { id: 'life1', type: 'lifestyle', title: '莫干山越野跑，这个周末就出发', desc: '跟博主一起体验山野之间的自在呼吸', icon: '⛰️', meta: '生活 · 刚刚' },
+    { id: 'shop2', type: 'shopping', title: '秋冬新衣 5 折起', desc: '限时，今晚 8 点下架', icon: '👔', meta: '商城 · 3 小时前' },
+    { id: 'ent1', type: 'entertainment', title: '评论区都在讨论的"神剧"', desc: '90% 的人看了评论比看剧还投入 😂', icon: '🎬', meta: '视频 · 刚刚' },
+    { id: 'learn2', type: 'learning', title: '凌晨 2 点开始的哲学讨论', desc: '为什么我们总想在深夜思考人生？', icon: '🤔', meta: '学习 · 23:41' },
+    { id: 'shop3', type: 'shopping', title: '口红色号测评', desc: '99 种色号，总有一款适合你', icon: '💄', meta: '商城 · 5 小时前' },
+    { id: 'video1', type: 'video', title: '我在抖音评论区扒了 3 小时', desc: '这些评论为什么比视频本身还精彩？', icon: '💭', meta: '视频 · 2 小时前' },
+    { id: 'life2', type: 'lifestyle', title: '3 点睡觉 9 点醒，这就是我的周末', desc: '只有这时候才能好好刷手机', icon: '😴', meta: '生活 · 6 小时前' },
+    { id: 'learn3', type: 'learning', title: '学了没？收藏这 200 个视频吧', desc: '打算哪天全看完 😅', icon: '📖', meta: '学习 · 昨天' },
+    { id: 'ent2', type: 'entertainment', title: '为什么评论区打开 15 条还想继续', desc: '一条比一条有意思', icon: '😂', meta: '视频 · 昨天' },
+    { id: 'shop4', type: 'shopping', title: '这个能收藏吗？我回头再来', desc: '打开输入框但没有真的下单...', icon: '💳', meta: '商城 · 昨天' },
+  ];
+
+  const ACHIEVEMENTS = {
+    common: [
+      { id: 'fake_buyer', name: '《假装只是看看》', desc: '连续打开购物内容但没下单。', icon: '🛒', rarity: 'common', rate: '42.6%', note: 'AI 偷偷观察了你 3 秒',
+        trigger: (hist) => {
+          const shopping = hist.filter(c => c.type === 'shopping');
+          if (shopping.length < 2) return false;
+          for (let i = 0; i < shopping.length; i++) {
+            if (shopping[i].dwell > 3000 && shopping[i].interactions.filter(a => a.type === 'buy').length === 0) {
+              return true;
+            }
+          }
+          return false;
+        }
+      },
+      { id: 'quantum', name: '《量子学习》', desc: '在学习视频停留 3 秒即默认学会。', icon: '📚', rarity: 'common', rate: '58.1%', note: 'AI 已替你掌握知识',
+        trigger: (hist) => {
+          const learn = hist.filter(c => c.type === 'learning');
+          for (let c of learn) {
+            if (c.dwell > 1000 && c.dwell < 5000) return true;
+          }
+          return false;
+        }
+      },
+      { id: 'time_mgmt', name: '《时间管理大师》', desc: '成功把 5 分钟休息刷成 2 小时。', icon: '⏳', rarity: 'common', rate: '37.9%', note: 'AI 帮你记了时',
+        trigger: (hist) => {
+          const totalDwell = hist.reduce((s, c) => s + c.dwell, 0);
+          return totalDwell > 120000; // 2 min+
+        }
+      },
+      { id: 'read_not_reply', name: '《已读不回艺术家》', desc: '看见消息但决定让它自然发酵。', icon: '💬', rarity: 'common', rate: '49.3%', note: 'AI 表示理解',
+        trigger: (hist) => {
+          const comments = hist.filter(c => c.interactions.some(a => a.type === 'comment'));
+          if (comments.length === 0) return false;
+          const noReply = comments.filter(c => !c.interactions.some(a => a.type === 'send'));
+          return noReply.length >= 1;
+        }
+      },
+    ],
+    rare: [
+      { id: 'late_night', name: '《深夜哲学家》', desc: '凌晨 2 点开始思考人生。', icon: '🌙', rarity: 'rare', rate: '8.7%', note: 'AI 也没睡',
+        trigger: (hist) => {
+          const h = new Date().getHours();
+          return (h >= 2 && h < 6);
+        }
+      },
+      { id: 'cyber_fear', name: '《赛博社恐》', desc: '输入框打开 7 次但没发送。', icon: '⌨️', rarity: 'rare', rate: '5.2%', note: 'AI 替你紧张',
+        trigger: (hist) => {
+          const comments = hist.flatMap(c => c.interactions).filter(a => a.type === 'comment');
+          return comments.length >= 5 && hist.flatMap(c => c.interactions).filter(a => a.type === 'send').length === 0;
+        }
+      },
+      { id: 'collector', name: '《收藏家》', desc: '收藏 200 条视频但从未复习。', icon: '⭐', rarity: 'rare', rate: '11.4%', note: 'AI 已不抱期待',
+        trigger: (hist) => {
+          const saves = hist.flatMap(c => c.interactions).filter(a => a.type === 'save').length;
+          return saves >= 3;
+        }
+      },
+    ],
+    mythic: [
+      { id: 'observer', name: '《人类观察者》', desc: '打开评论区比视频还认真。', icon: '👁️', rarity: 'mythic', rate: '0.9%', note: 'AI 决定颁发最高荣誉',
+        trigger: (hist) => {
+          const comments = hist.flatMap(c => c.interactions).filter(a => a.type === 'comment').length;
+          return comments >= 8;
+        }
+      },
+      { id: 'cyber_guard', name: '《电子守夜人》', desc: '手机电量低于 3% 仍坚持在线。', icon: '🔋', rarity: 'mythic', rate: '0.4%', note: 'AI 向你致敬',
+        trigger: (hist) => {
+          const h = new Date().getHours();
+          const totalDwell = hist.reduce((s, c) => s + c.dwell, 0);
+          return (h >= 2 && h < 6) && totalDwell > 30000;
+        }
+      },
+      { id: 'wanderer', name: '《精神流浪》', desc: '连续切换 12 个兴趣领域。', icon: '🧭', rarity: 'mythic', rate: '1.3%', note: 'AI 已跟不上你',
+        trigger: (hist) => {
+          if (hist.length < 5) return false;
+          let typeChanges = 0;
+          for (let i = 1; i < hist.length; i++) {
+            if (hist[i].type !== hist[i-1].type) typeChanges++;
+          }
+          return typeChanges >= 4;
+        }
+      },
+    ],
+  };
+
+  // ===== STATE =====
+  let state = {
+    cardHistory: [],
+    currentCard: null,
+    currentCardEnter: 0,
+    unlockedIds: new Set(),
+    audioCtx: null,
+  };
+
+  const THEME = {
+    common: { rc: '#5b8def', top: '#1a2436', bot: '#10141f' },
+    rare: { rc: '#b76bff', top: '#241a3a', bot: '#140e22' },
+    mythic: { rc: '#ffc24b', top: '#332512', bot: '#1c1408' },
+  };
+
+  function hexA(hex, a) {
+    const n = parseInt(hex.slice(1), 16);
+    const r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  // ===== UI =====
+  function renderCards() {
+    const scroll = document.getElementById('cardsScroll');
+    scroll.innerHTML = '';
+    CARD_DATA.forEach(card => {
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.dataset.id = card.id;
+      el.dataset.type = card.type;
+      el.innerHTML = `
+        <div class="card-header">
+          <div class="card-type">${card.type}</div>
+          <div class="card-title">${card.title}</div>
+        </div>
+        <div class="card-body">
+          <div class="card-icon">${card.icon}</div>
+          <div class="card-desc">${card.desc}</div>
+          <div class="card-meta"><span>❤️ 23.4w</span><span>💬 5201</span><span>${card.meta}</span></div>
+        </div>
+        <div class="card-actions">
+          <button class="btn" data-action="like">👍 赞</button>
+          <button class="btn" data-action="comment">💬 评</button>
+          <button class="btn" data-action="save">⭐ 存</button>
+          <button class="btn" data-action="share">↗ 分</button>
+        </div>
+      `;
+      
+      el.addEventListener('mouseenter', () => recordCardEnter(card, el));
+      el.addEventListener('mouseleave', () => recordCardExit());
+      
+      el.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const action = btn.dataset.action;
+          recordInteraction(action, btn);
+          checkAchievements();
+        });
+      });
+      
+      scroll.appendChild(el);
+    });
+  }
+
+  function recordCardEnter(card, el) {
+    if (state.currentCard && state.currentCard.id === card.id) return;
+    if (state.currentCard) recordCardExit();
+    
+    state.currentCard = {
+      id: card.id,
+      type: card.type,
+      enterTime: Date.now(),
+      interactions: [],
+    };
+    state.currentCardEnter = Date.now();
+    updateInfo();
+  }
+
+  function recordCardExit() {
+    if (!state.currentCard) return;
+    state.currentCard.dwell = Date.now() - state.currentCard.enterTime;
+    state.cardHistory.push(state.currentCard);
+    state.currentCard = null;
+    updateInfo();
+    checkAchievements();
+  }
+
+  function recordInteraction(action, btn) {
+    if (!state.currentCard) return;
+    state.currentCard.interactions.push({ type: action, time: Date.now() });
+    
+    // visual feedback
+    btn.classList.add('active');
+    setTimeout(() => btn.classList.remove('active'), 300);
+    
+    updateInfo();
+  }
+
+  function updateInfo() {
+    const card = state.currentCard;
+    const history = state.cardHistory;
+    
+    if (card) {
+      document.getElementById('infoCard').textContent = card.id;
+      const dwell = Math.floor((Date.now() - state.currentCardEnter) / 1000);
+      document.getElementById('infoDwell').textContent = dwell + 's';
+      document.getElementById('infoAct').textContent = card.interactions.length;
+    } else {
+      document.getElementById('infoCard').textContent = '-';
+      document.getElementById('infoDwell').textContent = '0s';
+      document.getElementById('infoAct').textContent = '0';
+    }
+    
+    if (history.length >= 2) {
+      const recentTypes = history.slice(-5).map(c => c.type);
+      const changes = recentTypes.filter((t, i) => i === 0 || t !== recentTypes[i-1]).length;
+      document.getElementById('infoSwitch').textContent = changes >= 3 ? '✓ 是' : '否';
+    }
+  }
+
+  function checkAchievements() {
+    const allAchs = [...ACHIEVEMENTS.common, ...ACHIEVEMENTS.rare, ...ACHIEVEMENTS.mythic];
+    for (let ach of allAchs) {
+      if (!state.unlockedIds.has(ach.id) && ach.trigger(state.cardHistory)) {
+        triggerAchievement(ach);
+        state.unlockedIds.add(ach.id);
+      }
+    }
+  }
+
+  function triggerAchievement(ach) {
+    const t = THEME[ach.rarity];
+    const overlay = document.getElementById('achOverlay');
+    const card = document.getElementById('achCard');
+    
+    overlay.style.setProperty('--rc', t.rc);
+    overlay.style.setProperty('--rc-30', hexA(t.rc, 0.30));
+    overlay.style.setProperty('--rc-40', hexA(t.rc, 0.40));
+    overlay.style.setProperty('--rc-50', hexA(t.rc, 0.50));
+    
+    card.style.background = `linear-gradient(180deg, ${t.top}, ${t.bot})`;
+    card.style.borderColor = hexA(t.rc, 0.30);
+    card.style.color = 'var(--ink)';
+    
+    document.getElementById('achBanner').style.color = t.rc;
+    document.getElementById('achRarity').textContent = ach.rarity === 'common' ? '普通' : ach.rarity === 'rare' ? '稀有' : '神话级';
+    document.getElementById('achRarity').style.color = t.rc;
+    document.getElementById('achRarity').style.borderColor = hexA(t.rc, 0.3);
+    document.getElementById('achRarity').style.background = hexA(t.rc, 0.08);
+    document.getElementById('achNote').textContent = ach.note;
+    document.getElementById('achTitle').textContent = ach.name;
+    document.getElementById('achDesc').textContent = ach.desc;
+    document.getElementById('achTrophy').textContent = ach.icon;
+    document.getElementById('achTrophy').style.borderColor = hexA(t.rc, 0.3);
+    document.getElementById('achTrophy').style.background = `radial-gradient(circle at 50% 35%, ${hexA(t.rc, 0.3)}, ${hexA(t.rc, 0.08)})`;
+    document.getElementById('achTrophy').style.boxShadow = `0 0 32px -4px ${t.rc}, inset 0 0 22px ${hexA(t.rc, 0.15)}`;
+    document.getElementById('achRate').textContent = ach.rate;
+    document.getElementById('achRate').style.color = t.rc;
+    document.getElementById('achRarityLabel').textContent = ach.rarity === 'common' ? '普通' : ach.rarity === 'rare' ? '稀有' : '神话级';
+    document.getElementById('achRarityLabel').style.color = t.rc;
+    document.getElementById('achTime').textContent = '刚刚';
+    
+    if (ach.rarity === 'mythic') {
+      card.classList.add('ach-mythic');
+      document.getElementById('achParticles').innerHTML = '';
+      for (let i = 0; i < 14; i++) {
+        const p = document.createElement('div');
+        p.className = 'ap';
+        p.style.left = (8 + Math.random() * 84) + '%';
+        p.style.setProperty('--d', (2.4 + Math.random() * 1.8) + 's');
+        p.style.setProperty('--delay', (Math.random() * 1.5) + 's');
+        p.style.width = p.style.height = (4 + Math.random() * 5) + 'px';
+        p.style.background = t.rc;
+        p.style.boxShadow = `0 0 8px ${t.rc}`;
+        document.getElementById('achParticles').appendChild(p);
+      }
+    } else {
+      card.classList.remove('ach-mythic');
+    }
+    
+    overlay.classList.remove('show', 'fire');
+    void overlay.offsetWidth;
+    overlay.classList.add('show', 'fire');
+    
+    addAchievementToList(ach);
+    playSound(ach.rarity);
+    
+    setTimeout(() => {
+      overlay.classList.remove('fire');
+    }, 2000);
+  }
+
+  function addAchievementToList(ach) {
+    const list = document.getElementById('achList');
+    if (list.children[0] && list.children[0].textContent.includes('刷卡片')) {
+      list.innerHTML = '';
+    }
+    
+    const item = document.createElement('div');
+    item.className = 'ach-item new ' + ach.rarity;
+    item.innerHTML = `
+      <div class="ach-item-name">${ach.name}</div>
+      <div class="ach-item-rate">全球解锁率 ${ach.rate}</div>
+    `;
+    list.insertBefore(item, list.firstChild);
+  }
+
+  function playSound(rarity) {
+    try {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = state.audioCtx;
+      const base = rarity === 'mythic' ? 523 : rarity === 'rare' ? 440 : 392;
+      [0, 90, 180].forEach((delay, k) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'triangle';
+        o.frequency.value = base * Math.pow(1.26, k);
+        o.connect(g);
+        g.connect(ctx.destination);
+        const t0 = ctx.currentTime + delay / 1000;
+        g.gain.setValueAtTime(0, t0);
+        g.gain.linearRampToValueAtTime(0.18, t0 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.5);
+        o.start(t0);
+        o.stop(t0 + 0.55);
+      });
+    } catch (e) { }
+  }
+
+  // ===== INIT =====
+  document.getElementById('achOverlay').querySelector('.ach-scrim').addEventListener('click', () => {
+    document.getElementById('achOverlay').classList.remove('show', 'fire');
+  });
+
+  setInterval(updateInfo, 500);
+  renderCards();
+  
+  // auto-scroll for demo
+  const scroll = document.getElementById('cardsScroll');
+  let autoIdx = 0;
+  setInterval(() => {
+    if (scroll.children.length > 0) {
+      autoIdx = (autoIdx + 1) % scroll.children.length;
+      scroll.children[autoIdx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, 8000);
+</script>
+</body>
+</html>
