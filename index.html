@@ -3,51 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#05060a">
-  <title>互联网生存成就系统 · AI 给你颁发离谱成就</title>
+  <meta name="theme-color" content="#0a0a10">
+  <title>互联网生存成就系统 · 它在偷偷给你颁奖</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@500;700&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@500;700;900&family=ZCOOL+KuaiLe&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main class="phone">
-    <!-- 头部 -->
+  <!-- 全局纹理覆盖 -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <main class="phone" id="phone">
+    <!-- 顶部 -->
     <header class="header">
       <div class="header-brand">
-        <span class="brand-dot"></span>
-        <span class="brand-text">互联网生存成就</span>
+        <span class="brand-mark">档</span>
+        <div class="brand-text">
+          <div class="brand-line">互联网生存成就</div>
+          <div class="brand-sub" id="brandSub">系统正在偷看你</div>
+        </div>
       </div>
       <div class="header-actions">
-        <button class="hbtn" id="headerSound">🔇</button>
-        <button class="hbtn trophy" id="headerTrophy">
-          <span>🏆</span><span class="badge"><b id="headerCount">0</b></span>
+        <button class="hbtn" id="headerSound" title="音效">🔇</button>
+        <button class="hbtn trophy" id="headerTrophy" title="成就馆">
+          <span class="t-emoji">🏆</span>
+          <span class="t-num"><b id="headerCount">0</b><span class="t-slash">/</span><span id="headerTotal">0</span></span>
         </button>
       </div>
     </header>
 
-    <!-- 抖音风信息流（垂直snap） -->
+    <!-- 内容流 -->
     <div class="feed" id="feed"></div>
 
-    <!-- 弹窗组件挂载点（叠加在 phone 内） -->
+    <!-- 弹窗挂载点 -->
     <div id="popupRoot"></div>
-
     <!-- 成就馆挂载点 -->
     <div id="galleryRoot"></div>
   </main>
 
-  <!-- 桌面端旁边的提示 / 说明（移动端会隐藏） -->
-  <aside class="side-note">
-    <h1>互联网生存成就系统</h1>
-    <p class="lead">AI 一边偷偷观察你刷手机，一边给你颁发离谱的成就。</p>
-    <ul class="hint-list">
-      <li>👆 上下滑动浏览不同分类视频</li>
-      <li>❤️ 点赞/收藏/打开评论会触发不同成就</li>
-      <li>⌨️ 试试打开输入框 又关掉</li>
-      <li>🕒 凌晨打开会有「深夜哲学家」</li>
-      <li>🏆 右上角奖杯 → 你的成就墙 (可截图分享)</li>
+  <!-- 桌面侧栏（移动端隐藏）：杂志感介绍 -->
+  <aside class="side-zine">
+    <div class="zine-stamp">No. 01</div>
+    <h1 class="zine-title">互联网<br>生存<br>成就<br>系统</h1>
+    <div class="zine-divider"></div>
+    <p class="zine-lead">
+      它不会真的分析你。<br>
+      它只会把你的每一次走神、点赞、犹豫，<br>
+      读成<span class="zine-mark">荒谬的</span>结论。
+    </p>
+    <ul class="zine-list">
+      <li><span class="li-no">01</span>上下滑动 — 翻刷分类不同的视频</li>
+      <li><span class="li-no">02</span>点赞 / 收藏 / 评论 / 输入 — 都会被读成笑话</li>
+      <li><span class="li-no">03</span>凌晨刷 = 解锁深夜专属</li>
+      <li><span class="li-no">04</span>右上角奖杯 → 你的档案本</li>
+      <li><span class="li-no">05</span>截图分享 — 让朋友也被颁奖</li>
     </ul>
-    <p class="foot-note">这是一个黑客松 Demo · 灵感来自 Steam 成就 + 抖音 + 互联网荒诞性</p>
+    <div class="zine-divider thin"></div>
+    <p class="zine-foot">
+      抖音黑客松 Demo · 灵感来自<br>
+      <i>Steam 成就 + 抖音 + 互联网荒诞性</i>
+    </p>
   </aside>
 
   <script type="module" src="js/app.js"></script>
