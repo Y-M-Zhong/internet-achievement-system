@@ -1,6 +1,7 @@
 // ===== 成就馆 (档案本风) =====
 // 用 unlock 记录里固化的 desc/narrator (含 <b>) 渲染, 已解锁=动态文案, 未解锁=静态文案
-import { ACHIEVEMENTS, RARITY, getArchetype, buildPersona } from './data.js';
+import { ACHIEVEMENTS, RARITY, getArchetype, buildPersona, computeDimensions, DIMENSIONS, topDimension } from './data.js';
+import { buildRadarSVG } from './persona.js';
 
 export class Gallery {
   constructor(rootEl, tracker, { onShowPersona } = {}) {
@@ -38,39 +39,40 @@ export class Gallery {
     // 人设条
     const list = ACHIEVEMENTS.filter(a => unlocked[a.id]);
     const persona = buildPersona(list, s);
-// 改后
-if (persona && got >= 4) {
-  this.elPersonaBar.style.display = '';
-  const b = persona.behavior;
-  const rarityColor = { common:'#4f7be8', rare:'#a85fff', epic:'#26c277', mythic:'#e8a91d' };
-  if (b) {
-    const col = rarityColor[b.rarity] || '#e8a91d';
-    this.elPersonaBar.innerHTML = `
-      <div class="pb-info">
-        <div class="pb-cap">YOUR BEHAVIOR PERSONA</div>
-        <div class="pb-behavior-code" style="color:${col}">${b.icon || ''} ${b.code}</div>
-        <div class="pb-behavior-name">${b.name}</div>
-        <div class="pb-behavior-tag">"${b.tagline}"</div>
-        <div class="pb-rate">${b.rate} 的用户属于这个类型</div>
-      </div>
-      <button class="pb-btn" id="pbShow">查看 ↗</button>
-    `;
-  } else {
-    this.elPersonaBar.innerHTML = `
-      <div class="pb-info">
-        <div class="pb-cap">YOUR PERSONA</div>
-        <div class="pb-label">${persona.label}</div>
-        <div class="pb-rate">${persona.rate} 用户得到这个组合</div>
-      </div>
-      <button class="pb-btn" id="pbShow">查看 ↗</button>
-    `;
-  }
-  const btn = this.elPersonaBar.querySelector('#pbShow');
-  btn?.addEventListener('click', ()=>{ this.close(); this.onShowPersona?.(); });
-} else {
-  this.elPersonaBar.style.display = 'none';
-  this.elPersonaBar.innerHTML = '';
-}
+    if (persona && got >= 3) {
+      const dims = computeDimensions(s);
+      const top  = topDimension(dims);
+      const b    = persona.behavior;
+      const rarityColor = { common:'#4f7be8', rare:'#a85fff', epic:'#26c277', mythic:'#e8a91d' };
+      const col = b ? (rarityColor[b.rarity] || '#e8a91d') : '#e8a91d';
+
+      const infoHtml = b
+        ? `<div class="pb-info">
+             <div class="pb-cap">YOUR BEHAVIOR PERSONA</div>
+             <div class="pb-behavior-code" style="color:${col}">${b.icon || ''} ${b.code}</div>
+             <div class="pb-behavior-name">${b.name}</div>
+             <div class="pb-behavior-tag">"${b.tagline}"</div>
+             <div class="pb-rate">${b.rate} 用户 · <b>${top.label}</b>${top.value}%</div>
+             <button class="pb-btn" id="pbShow">查看大图 ↗</button>
+           </div>`
+        : `<div class="pb-info">
+             <div class="pb-cap">YOUR PERSONA</div>
+             <div class="pb-label">${persona.label}</div>
+             <div class="pb-rate">${persona.rate} 用户 · <b>${top.label}</b>${top.value}%</div>
+             <button class="pb-btn" id="pbShow">查看大图 ↗</button>
+           </div>`;
+
+      this.elPersonaBar.style.display = '';
+      this.elPersonaBar.innerHTML = `
+        <div class="pb-radar">${buildRadarSVG(dims, DIMENSIONS)}</div>
+        ${infoHtml}
+      `;
+      const btn = this.elPersonaBar.querySelector('#pbShow');
+      btn?.addEventListener('click', ()=>{ this.close(); this.onShowPersona?.(); });
+    } else {
+      this.elPersonaBar.style.display = 'none';
+      this.elPersonaBar.innerHTML = '';
+    }
 
     // 分组卡片
     const groups = ['mythic','epic','rare','common'];

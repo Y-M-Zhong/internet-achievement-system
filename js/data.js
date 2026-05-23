@@ -97,7 +97,7 @@ export function materializeNarrator(ach, state, event, ctx) {
 export const ACHIEVEMENTS = [
   // ============ 普通 ============
   { id:'arrive', rarity:'common', icon:'👋', name:'《抵达现场》',
-    rate:'99.7%', personaSlug:'互联网新人', personaWeight:0,
+    rate:'99.7%', personaSlug:'网生菜鸟', personaWeight:0,
     desc:'成功打开这个不知道是什么的东西。',
     narrator:'又一个进来的, 记一笔。',
     descFn:(s,e,ctx)=>`你在 <b>${ctx.hm()}</b> 的${ctx.period()}抵达。系统已为你建立档案。`,
@@ -105,7 +105,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='init' },
 
   { id:'swipe5', rarity:'common', icon:'👆', name:'《滑动小能手》',
-    rate:'92.4%', personaSlug:'滑动选手', personaWeight:1,
+    rate:'92.4%', personaSlug:'滑动机', personaWeight:1,
     desc:'5 次滑动起步, 你已是合格的电子游民。',
     narrator:'数据已记录。',
     descFn:(s,e,ctx)=>{
@@ -129,7 +129,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='like' && s.likes===1 },
 
   { id:'first_save', rarity:'common', icon:'⭐', name:'《下次一定会看》',
-    rate:'79.3%', personaSlug:'收藏初学者', personaWeight:1,
+    rate:'79.3%', personaSlug:'仓鼠预备役', personaWeight:1,
     desc:'下次的具体时间是什么时候。',
     narrator:'懂得都懂。',
     descFn:(s,e,ctx)=>{
@@ -142,7 +142,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='save' && s.saves===1 },
 
   { id:'quantum_learn', rarity:'common', icon:'⚡', name:'《量子学习》',
-    rate:'76.2%', personaSlug:'量子学习者', personaWeight:3,
+    rate:'76.2%', personaSlug:'3秒大师', personaWeight:3,
     desc:'在学习视频停留不到 3 秒, 默认已经掌握。',
     narrator:'3 秒学完, 行业天花板。',
     descFn:(s,e,ctx)=>{
@@ -154,7 +154,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='leave_card' && e.cat==='study' && e.stayMs<3000 },
 
   { id:'shopping_2', rarity:'common', icon:'🛒', name:'《看看就好》', chain:'shopping',
-    rate:'65.6%', personaSlug:'假装不剁手', personaWeight:2,
+    rate:'65.6%', personaSlug:'假装不买党', personaWeight:2,
     desc:'连续看了 3 条购物内容, 钱包暂时安全。',
     narrator:'钱包: 谢谢。',
     descFn:(s,e,ctx)=>{
@@ -167,7 +167,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> (s.catViews.shopping||0)>=3 },
 
   { id:'time_master', rarity:'common', icon:'⏳', name:'《本来想刷5分钟》',
-    rate:'67.9%', personaSlug:'时间幻觉派', personaWeight:1,
+    rate:'67.9%', personaSlug:'时间黑洞', personaWeight:1,
     desc:'你已在线 1 分钟, 这才刚开始。',
     narrator:'温馨提示: 才一分钟。',
     descFn:(s,e,ctx)=>{
@@ -178,7 +178,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> (Date.now()-s.startTs)>=60_000 },
 
   { id:'read_no_reply', rarity:'common', icon:'💬', name:'《已读不回艺术家》',
-    rate:'55.4%', personaSlug:'已读不回家', personaWeight:2,
+    rate:'55.4%', personaSlug:'哑巴人', personaWeight:2,
     desc:'打开评论 ≠ 想要发言, 这很合理。',
     narrator:'评论区不是发言区。',
     descFn:(s,e,ctx)=>{
@@ -190,7 +190,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='comment_open' && s.commentOpens>=1 },
 
   { id:'multi_like', rarity:'common', icon:'💖', name:'《点赞流水线》',
-    rate:'41.7%', personaSlug:'点赞工厂主', personaWeight:2,
+    rate:'41.7%', personaSlug:'点赞机', personaWeight:2,
     desc:'10 个赞: 你今天心情应该不错。',
     narrator:'心意收下。',
     descFn:(s,e,ctx)=>`${ctx.hm()} 之前, 你已经点了 <b>${s.likes}</b> 个赞。算法已为你打上"易满足"标签。`,
@@ -198,7 +198,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.likes>=10 },
 
   { id:'pet_lover', rarity:'common', icon:'🐱', name:'《又点开吸猫了》',
-    rate:'44.2%', personaSlug:'电子吸猫党', personaWeight:3,
+    rate:'44.2%', personaSlug:'吸猫人', personaWeight:3,
     desc:'看 3 条萌宠, 你的多巴胺已被预订。',
     narrator:'懂的。',
     descFn:(s,e,ctx)=>{
@@ -211,7 +211,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> (s.catViews.pet||0)>=3 },
 
   { id:'side_eye', rarity:'common', icon:'💨', name:'《没看完就划了》',
-    rate:'48.2%', personaSlug:'蜻蜓点水派', personaWeight:2,
+    rate:'48.2%', personaSlug:'蜻蜓人', personaWeight:2,
     desc:'10 次滑动平均停留不到 2 秒, 该叫醒算法了。',
     narrator:'下一条更好? 拭目以待。',
     descFn:(s)=>{
@@ -222,7 +222,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.swipes>=10 && (s.totalStayMs/s.swipes)<2000 },
 
   { id:'food_night', rarity:'common', icon:'🌃', name:'《半夜想吃东西》',
-    rate:'38.4%', personaSlug:'深夜放毒受害者', personaWeight:3,
+    rate:'38.4%', personaSlug:'馋鬼人', personaWeight:3,
     desc:'夜里 10 点之后看美食, 这种事还是少做。',
     narrator:'饿了就睡, 别折磨自己。',
     descFn:(s,e,ctx)=>{
@@ -233,7 +233,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> { const h=new Date().getHours(); return e.type==='view_card' && e.cat==='food' && (h>=22||h<=4); } },
 
   { id:'heart_struck', rarity:'common', icon:'💘', name:'《心动了》',
-    rate:'31.5%', personaSlug:'电子心动派', personaWeight:2,
+    rate:'31.5%', personaSlug:'走神人', personaWeight:2,
     desc:'同一条视频停留超过 12 秒, 已截图存证。',
     narrator:'你的偶像剧已收件。',
     descFn:(s,e,ctx)=>{
@@ -245,7 +245,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='leave_card' && e.stayMs>=12_000 },
 
   { id:'comment_open', rarity:'common', icon:'👀', name:'《想看评论》',
-    rate:'58.0%', personaSlug:'评论区好奇宝宝', personaWeight:1,
+    rate:'58.0%', personaSlug:'评区窥探员', personaWeight:1,
     desc:'你也好奇别人怎么说? 你不是一个人。',
     narrator:'底下藏着真世界。',
     descFn:(s,e,ctx)=>{
@@ -256,7 +256,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='comment_open' },
 
   { id:'first_search', rarity:'common', icon:'🔍', name:'《打开了搜索框》',
-    rate:'47.1%', personaSlug:'搜索犹豫人', personaWeight:1,
+    rate:'47.1%', personaSlug:'想说党', personaWeight:1,
     desc:'你想说点什么, 然后大概率不会说出来。',
     narrator:'—',
     descFn:(s,e,ctx)=>{
@@ -268,7 +268,7 @@ export const ACHIEVEMENTS = [
 
   // ============ 稀有 ============
   { id:'midnight_phil', rarity:'rare', icon:'🌙', name:'《深夜哲学家》',
-    rate:'8.7%', personaSlug:'深夜哲学家', personaWeight:4,
+    rate:'8.7%', personaSlug:'凌晨哲学家', personaWeight:4,
     desc:'凌晨 2 点开始思考人生, 请节哀。',
     narrator:'我陪着你, 别一个人扛。',
     descFn:(s,e,ctx)=>{
@@ -279,7 +279,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> { const h=new Date().getHours(); return e.type==='view_card' && e.cat==='philosophy' && (h>=23||h<=5); } },
 
   { id:'cyber_shy', rarity:'rare', icon:'⌨️', name:'《赛博社恐》', chain:'shy',
-    rate:'5.2%', personaSlug:'赛博社恐', personaWeight:4,
+    rate:'5.2%', personaSlug:'赛博哑巴', personaWeight:4,
     desc:'输入框打开 5 次, 一个字也没发出去。',
     narrator:'打完字又撤回的人, 看到这条就懂了。',
     descFn:(s)=>`你打开输入框 <b>${s.inputFocusCount}</b> 次, 发出 <b>0</b> 个字。打字 → 撤回 → 再打字, 现代人的诚实。`,
@@ -287,7 +287,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.inputFocusCount>=5 && s.inputSendCount===0 },
 
   { id:'collector', rarity:'rare', icon:'⭐', name:'《收藏家》',
-    rate:'11.4%', personaSlug:'收藏夹守门人', personaWeight:3,
+    rate:'11.4%', personaSlug:'收藏不看人', personaWeight:3,
     desc:'已收藏 8 条视频, 没有回看任何一条。',
     narrator:'档案: 已塞满。',
     descFn:(s)=>`你已收藏 <b>${s.saves}</b> 条, 回看过 <b>0</b> 条。"下次一定" 的下次还没来。`,
@@ -295,7 +295,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.saves>=8 },
 
   { id:'replayer', rarity:'rare', icon:'🔁', name:'《复读机》',
-    rate:'9.6%', personaSlug:'回看研究员', personaWeight:3,
+    rate:'9.6%', personaSlug:'回看怪', personaWeight:3,
     desc:'同一条视频回看 3 次, 你在找彩蛋吗。',
     narrator:'二刷的人 品出新东西了吗?',
     descFn:(s,e,ctx)=>{
@@ -308,7 +308,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> Object.values(s.cardViews||{}).some(v=>v>=3) },
 
   { id:'channel_surf', rarity:'rare', icon:'🎚️', name:'《切换大师》',
-    rate:'13.1%', personaSlug:'分类游牧民', personaWeight:3,
+    rate:'13.1%', personaSlug:'兴趣游牧民', personaWeight:3,
     desc:'60 秒内切换 5 种不同兴趣, 算法已晕。',
     narrator:'你刚才在搜什么?',
     descFn:(s,e,ctx)=>{
@@ -329,7 +329,7 @@ export const ACHIEVEMENTS = [
     } },
 
   { id:'comment_native', rarity:'rare', icon:'👥', name:'《评论区原住民》',
-    rate:'14.8%', personaSlug:'评论区原住民', personaWeight:3,
+    rate:'14.8%', personaSlug:'评区原住民', personaWeight:3,
     desc:'4 次打开评论区, 怀疑你认为这才是主战场。',
     narrator:'知音 ✋',
     descFn:(s)=> `你已经打开评论区 <b>${s.commentOpens}</b> 次。视频只是开胃, 评论才是正餐。`,
@@ -337,7 +337,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.commentOpens>=4 },
 
   { id:'fake_busy', rarity:'rare', icon:'🎭', name:'《打字 删除 再打字》',
-    rate:'7.3%', personaSlug:'草稿箱常驻', personaWeight:3,
+    rate:'7.3%', personaSlug:'撤回选手', personaWeight:3,
     desc:'3 次打开输入框又快速关掉。',
     narrator:'你的草稿箱已超载。',
     descFn:(s)=> `打开输入框 <b>${s.inputFocusCount}</b> 次, <b>${s.inputBlurFastCount}</b> 次没到 1.5 秒就关掉。你想说什么呢?`,
@@ -345,7 +345,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.inputFocusCount>=3 && s.inputBlurFastCount>=3 },
 
   { id:'tired_1', rarity:'rare', icon:'🥱', name:'《今天有点累》', chain:'tired',
-    rate:'17.4%', personaSlug:'电子困倦者', personaWeight:2,
+    rate:'17.4%', personaSlug:'屏幕植物人', personaWeight:2,
     desc:'你在某条视频上停了很久, 没动。',
     narrator:'—',
     descFn:(s,e,ctx)=>{
@@ -357,7 +357,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.longStays===1 },
 
   { id:'impulse_like', rarity:'rare', icon:'⚡', name:'《手滑双击》',
-    rate:'22.3%', personaSlug:'手指诚实党', personaWeight:3,
+    rate:'22.3%', personaSlug:'手快党', personaWeight:3,
     desc:'看到一半就点赞, 你的手指比你诚实。',
     narrator:'记一笔, 不点评。',
     descFn:(s,e,ctx)=>{
@@ -369,7 +369,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='like' && (Date.now()-(s.cardEnterTs||0))<2500 },
 
   { id:'shopping_4', rarity:'rare', icon:'🧾', name:'《又看了》', chain:'shopping',
-    rate:'15.8%', personaSlug:'钱包警告型', personaWeight:3,
+    rate:'15.8%', personaSlug:'剁手预备役', personaWeight:3,
     desc:'5 条购物内容, 我数着的。',
     narrator:'—',
     descFn:(s,e,ctx)=>{
@@ -382,7 +382,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> (s.catViews.shopping||0)>=5 },
 
   { id:'stay_zen', rarity:'rare', icon:'🪷', name:'《停下来想想》',
-    rate:'9.2%', personaSlug:'屏幕禅修人', personaWeight:3,
+    rate:'9.2%', personaSlug:'屏幕呆人', personaWeight:3,
     desc:'同一条视频停留超过 20 秒, 稀有: 出现思考。',
     narrator:'罕见镜头, 已记录。',
     descFn:(s,e,ctx)=>{
@@ -394,7 +394,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='leave_card' && e.stayMs>=20_000 },
 
   { id:'meta_swipe', rarity:'rare', icon:'🧷', name:'《算法揭秘》',
-    rate:'6.5%', personaSlug:'算法揭秘人', personaWeight:2,
+    rate:'6.5%', personaSlug:'算法克星', personaWeight:2,
     desc:'你已切换 7 个分类, 算法档案 +1。',
     narrator:'你已被打上标签 (假的)。',
     descFn:(s,e,ctx)=>{
@@ -406,7 +406,7 @@ export const ACHIEVEMENTS = [
 
   // ============ 史诗 ============
   { id:'human_observer', rarity:'epic', icon:'👁️', name:'《人类观察者》',
-    rate:'1.9%', personaSlug:'评论区学者', personaWeight:4,
+    rate:'1.9%', personaSlug:'评区田野党', personaWeight:4,
     desc:'打开评论区 6 次, 点赞却很克制。AI 决定颁发学位。',
     narrator:'毕业证书已寄出。',
     descFn:(s)=> `<b>${s.commentOpens}</b> 次打开评论区, 只点了 <b>${s.likes}</b> 个赞。你在做田野调查吗?`,
@@ -425,7 +425,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> Object.keys(s.catViews).length>=10 },
 
   { id:'collect_end', rarity:'epic', icon:'📦', name:'《收藏夹的尽头》',
-    rate:'1.4%', personaSlug:'收藏夹尽头人', personaWeight:4,
+    rate:'1.4%', personaSlug:'收藏黑洞', personaWeight:4,
     desc:'15 条收藏 + 0 次回看, 系统已为你预约清理日。',
     narrator:'我替你清空 也不会通知你。',
     descFn:(s)=> `你的收藏夹: <b>${s.saves}</b> 条进入, <b>0</b> 条回看。它在变成第二个浏览器收藏夹。`,
@@ -433,7 +433,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.saves>=15 },
 
   { id:'zen_blank', rarity:'epic', icon:'🧘', name:'《沉浸式发呆》',
-    rate:'3.6%', personaSlug:'沉浸发呆派', personaWeight:3,
+    rate:'3.6%', personaSlug:'发呆王', personaWeight:3,
     desc:'在同一条视频呆了 25 秒以上, 不敢打扰。',
     narrator:'屏住呼吸的人是我。',
     descFn:(s,e,ctx)=>{
@@ -444,7 +444,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> e.type==='leave_card' && e.stayMs>=25_000 },
 
   { id:'tired_2', rarity:'epic', icon:'😶‍🌫️', name:'《真的有点累》', chain:'tired',
-    rate:'2.1%', personaSlug:'真·困倦者', personaWeight:3,
+    rate:'2.1%', personaSlug:'真·植物人', personaWeight:3,
     desc:'又一次长时间发呆, 第二次了。',
     narrator:'—',
     descFn:(s)=> `这是你 <b>第 ${s.longStays} 次</b> 长时间停在屏幕上。要不要起来走走?`,
@@ -464,7 +464,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> (s.catViews.shopping||0)>=8 },
 
   { id:'only_consume', rarity:'epic', icon:'🪐', name:'《沉默观察员》',
-    rate:'2.9%', personaSlug:'沉默观察员', personaWeight:4,
+    rate:'2.9%', personaSlug:'装死浏览者', personaWeight:4,
     desc:'12 次滑动 + 0 点赞 + 0 收藏, 你在练隐身。',
     narrator:'你以为没人看你, 我看着呢。',
     descFn:(s)=> `<b>${s.swipes}</b> 次滑动, <b>0</b> 赞, <b>0</b> 收藏。你以为是隐身, 其实更显眼。`,
@@ -489,7 +489,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> { const h=new Date().getHours(); return (h>=2&&h<=5) && (Date.now()-s.startTs)>=5*60_000; } },
 
   { id:'time_traveler', rarity:'mythic', icon:'🛸', name:'《时空旅人》',
-    rate:'0.7%', personaSlug:'时空旅人', personaWeight:5,
+    rate:'0.7%', personaSlug:'阴间作息党', personaWeight:5,
     desc:'凌晨 4–6 点仍在认真刷, 时间已查不到记录。',
     narrator:'天快亮了, 你呢。',
     descFn:(s,e,ctx)=> `<b>${ctx.hm()}</b>, 天就快亮了, 你的瞳孔倒影里全是屏幕。`,
@@ -509,7 +509,7 @@ export const ACHIEVEMENTS = [
     } },
 
   { id:'ai_giveup', rarity:'mythic', icon:'🤖', name:'《看不懂你》',
-    rate:'0.2%', personaSlug:'无法被画像者', personaWeight:5,
+    rate:'0.2%', personaSlug:'AI 投降人', personaWeight:5,
     desc:'在线 8 分钟, 任何标签都套不上你。',
     narrator:'我放弃理解了, 你赢。',
     descFn:(s,e,ctx)=> `<b>${ctx.minutesOnline()}</b> 分钟, <b>${s.swipes}</b> 次滑动, <b>0</b> 赞, <b>0</b> 收藏。任何标签都套不上你。`,
@@ -517,7 +517,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> (Date.now()-s.startTs)>=8*60_000 && s.likes===0 && s.saves===0 },
 
   { id:'tired_3', rarity:'mythic', icon:'🌙', name:'《建议休眠》', chain:'tired',
-    rate:'0.5%', personaSlug:'已预约就寝', personaWeight:5,
+    rate:'0.5%', personaSlug:'困死人', personaWeight:5,
     desc:'第 5 次长时间停留. 已为你预约就寝。',
     narrator:'—',
     descFn:(s,e,ctx)=> `已经是 <b>第 ${s.longStays} 次</b> 你不动了。${ctx.hm()}, 系统替你点了"就寝"。`,
@@ -525,7 +525,7 @@ export const ACHIEVEMENTS = [
     check:(s,e)=> s.longStays===5 },
 
   { id:'archeologist', rarity:'mythic', icon:'🗿', name:'《互联网考古学家》',
-    rate:'0.8%', personaSlug:'互联网考古学家', personaWeight:5,
+    rate:'0.8%', personaSlug:'考古癖', personaWeight:5,
     desc:'看完 12 条又回到第一条, 你在做学术?',
     narrator:'摘下眼镜, 向你致敬。',
     descFn:(s,e,ctx)=>{
@@ -729,4 +729,148 @@ function comboRate(picks) {
   // sqrt 几何均值 × 0.5 ——既反映稀有度组合, 又不会被极端值压成 0
   const combo = Math.sqrt(r1 * r2) * 0.5;
   return (combo < 1 ? combo.toFixed(2) : combo.toFixed(1)) + '%';
+}
+// ===== 6 维人格雷达 =====
+// 每一维都从 state 直接读真实行为, 0-100 分。
+// 维度命名借 SBTI 的语气: 短、扎、像贴标签
+export const DIMENSIONS = [
+  { key:'addiction',  label:'上头',   sub:'刷不停'        },
+  { key:'impatient',  label:'急性子', sub:'三秒就滑'      },
+  { key:'hoarder',    label:'囤货癖', sub:'收藏不看'      },
+  { key:'nocturnal',  label:'阴间',   sub:'凌晨在线'      },
+  { key:'lurker',     label:'潜水',   sub:'看而不语'      },
+  { key:'performer',  label:'戏精',   sub:'打字 + 发声'   },
+];
+
+const clamp = (v, lo=0, hi=100) => Math.max(lo, Math.min(hi, v));
+
+export function computeDimensions(state) {
+  const minutes = (Date.now() - state.startTs) / 60_000;
+  const avgStaySec = state.swipes > 0 ? (state.totalStayMs / state.swipes / 1000) : 0;
+  const h = new Date().getHours();
+  const isNight = (h >= 22 || h <= 5);
+
+  // 互动率: 任何主动行为 / 滑动总数
+  const total = Math.max(state.swipes, 1);
+  const interactRatio = (state.likes + state.saves + state.commentOpens + state.inputFocusCount) / total;
+  const lurkRatio = clamp(1 - interactRatio, 0, 1);
+
+  return {
+    // 上头 = 在线时长 + 滑动节奏
+    addiction:  Math.round(clamp(minutes * 6 + state.swipes * 3 + state.likes * 1.5)),
+    // 急性子 = 平均停留越短越急
+    impatient:  Math.round(clamp(avgStaySec > 0 ? Math.min(8 / avgStaySec, 4) * 25 : (state.swipes>=3 ? 30 : 15))),
+    // 囤货 = saves 主导, 二阶 like 加权
+    hoarder:    Math.round(clamp(state.saves * 13 + state.likes * 1.8)),
+    // 阴间 = 时段 + 当前小时活动量
+    nocturnal:  Math.round(clamp((isNight ? 50 : 0) + (isNight ? state.swipes * 3 : 0) + (h>=0 && h<=3 ? 20 : 0))),
+    // 潜水 = 1 - 互动率, 给"只看不点"加分
+    lurker:     Math.round(clamp(lurkRatio * 80 + (state.swipes >= 8 && state.likes === 0 ? 25 : 0) + state.longStays * 6)),
+    // 戏精 = 输入框 + 发送 + 评论
+    performer:  Math.round(clamp(state.inputFocusCount * 18 + state.inputSendCount * 22 + state.commentOpens * 7)),
+  };
+}
+
+// 找出最突出的维度 (用于副标 / 分享文案)
+export function topDimension(dims) {
+  let best = null;
+  for (const d of DIMENSIONS) {
+    const v = dims[d.key] || 0;
+    if (!best || v > best.value) best = { ...d, value: v };
+  }
+  return best;
+}
+
+// ===== 行为证据: 抽 3 条最扎心的真实数据 =====
+// 输出 [{ icon, text }], text 含 <b> 数字高亮
+// 候选很多, 按"分数"从大到小取前 3 条 (分数 = 这个事实有多反差/有多扎心)
+export function buildEvidence(state) {
+  const minutes = (Date.now() - state.startTs) / 60_000;
+  const avgStaySec = state.swipes > 0 ? (state.totalStayMs / state.swipes / 1000) : 0;
+  const h = new Date().getHours();
+  const candidates = [];
+
+  if (state.swipes >= 5) {
+    candidates.push({
+      icon:'👆',
+      score: state.swipes * 2,
+      text:`你已经滑了 <b>${state.swipes}</b> 次, 平均每张只看 <b>${avgStaySec.toFixed(1)} 秒</b>。`,
+    });
+  }
+  if (state.saves >= 3 && state.likes <= state.saves) {
+    candidates.push({
+      icon:'⭐',
+      score: state.saves * 8 + 20,
+      text:`收藏了 <b>${state.saves}</b> 条, 点开回看 <b>0</b> 次。"下次一定" 没说哪天。`,
+    });
+  }
+  if (state.commentOpens >= 2 && state.inputSendCount === 0) {
+    candidates.push({
+      icon:'💬',
+      score: state.commentOpens * 6 + 18,
+      text:`打开评论区 <b>${state.commentOpens}</b> 次, 一个字也没发出去。`,
+    });
+  }
+  if (state.inputFocusCount >= 2 && state.inputBlurFastCount >= 1) {
+    candidates.push({
+      icon:'⌨️',
+      score: state.inputBlurFastCount * 10 + 15,
+      text:`打字 <b>${state.inputFocusCount}</b> 次, 秒退 <b>${state.inputBlurFastCount}</b> 次, 草稿箱已超载。`,
+    });
+  }
+  if (state.swipes >= 8 && state.likes === 0 && state.saves === 0) {
+    candidates.push({
+      icon:'🫥',
+      score: 40,
+      text:`<b>${state.swipes}</b> 次滑动, <b>0</b> 个赞, <b>0</b> 个收藏。系统怀疑你只是路过。`,
+    });
+  }
+  if ((h >= 22 || h <= 5) && state.swipes >= 3) {
+    const hm = `${String(h).padStart(2,'0')}:${String(new Date().getMinutes()).padStart(2,'0')}`;
+    candidates.push({
+      icon:'🌙',
+      score: (h <= 3 ? 50 : 30),
+      text:`<b>${hm}</b>, 你还在刷。这个点醒着的, 没几个正经人。`,
+    });
+  }
+  if (avgStaySec > 0 && avgStaySec < 2.5 && state.swipes >= 5) {
+    candidates.push({
+      icon:'⚡',
+      score: 28,
+      text:`平均每张视频只看 <b>${avgStaySec.toFixed(1)} 秒</b>。算法都跟不上你的频率。`,
+    });
+  }
+  if (state.longStays >= 1) {
+    candidates.push({
+      icon:'🥱',
+      score: state.longStays * 12 + 10,
+      text:`有 <b>${state.longStays}</b> 次你停在屏幕上没动。是发呆还是睡着了。`,
+    });
+  }
+  if (Object.keys(state.catViews||{}).length >= 5) {
+    const n = Object.keys(state.catViews).length;
+    candidates.push({
+      icon:'🧭',
+      score: n * 4,
+      text:`你点开过 <b>${n}</b> 种分类, 哪个都没沉下来。`,
+    });
+  }
+  if (state.likes >= 5 && state.commentOpens === 0) {
+    candidates.push({
+      icon:'❤️',
+      score: state.likes * 3,
+      text:`点了 <b>${state.likes}</b> 个赞, 没打开过一次评论区。心动只到点赞为止。`,
+    });
+  }
+
+  // 兜底: 如果一条都没有 (用户什么都没做), 给一个 starter 证据
+  if (candidates.length === 0) {
+    candidates.push({
+      icon:'👀',
+      score: 1,
+      text:`你打开了它, 然后什么都没做。这本身就是一种姿态。`,
+    });
+  }
+
+  return candidates.sort((a,b)=> b.score - a.score).slice(0, 3);
 }
