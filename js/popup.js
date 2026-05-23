@@ -1,5 +1,5 @@
 // ===== 成就弹窗 =====
-// 沿用原型审美，叠加：banner 含装饰线、card 顶部"颁"印章、narrator 字段、队列管理
+// 队列管理 / 主题色 / 粒子 / 颁字印章 / 支持动态 HTML 描述 (含 <b> 高亮)
 import { RARITY } from './data.js';
 
 const THEME = {
@@ -25,19 +25,20 @@ export class AchievementPopup {
     this.render();
   }
 
-  enqueue(ach) {
-    this.queue.push(ach);
+  // item: { ach, desc, narrator } —— desc/narrator 为已固化的字符串(可含 <b>)
+  enqueue(item) {
+    this.queue.push(item);
     if (!this.busy) this.next();
   }
 
   next() {
-    const ach = this.queue.shift();
-    if (!ach) { this.busy = false; return; }
+    const item = this.queue.shift();
+    if (!item) { this.busy = false; return; }
     this.busy = true;
-    this.show(ach);
+    this.show(item);
   }
 
-  show(ach) {
+  show({ ach, desc, narrator }) {
     const rarity = ach.rarity;
     const t = THEME[rarity];
     const meta = RARITY[rarity];
@@ -54,15 +55,16 @@ export class AchievementPopup {
     wrap.style.setProperty('--flash', meta.flash);
 
     this.card.classList.toggle('mythic', rarity==='mythic');
-    this.elBadge.textContent = `${meta.label} · ${ach.id}`;
-    this.elNum.textContent   = meta.label;
-    this.elTitle.textContent = ach.name;
-    this.elDesc.textContent  = ach.desc;
-    this.elIcon.textContent  = ach.icon;
-    this.elNote.textContent  = ach.narrator || '—';
-    this.elTime.textContent  = '刚刚';
+    this.elBadge.textContent  = `${meta.label} · ${ach.id}`;
+    this.elNum.textContent    = meta.label;
+    this.elTitle.textContent  = ach.name;
+    // 描述用 innerHTML, 因为可能含 <b> 高亮真实数据
+    this.elDesc.innerHTML     = desc || ach.desc;
+    this.elIcon.textContent   = ach.icon;
+    this.elNote.innerHTML     = narrator || ach.narrator || '—';
+    this.elTime.textContent   = '刚刚';
     this.elRate.dataset.target = ach.rate;
-    this.elRate.textContent = '0%';
+    this.elRate.textContent   = '0%';
     this.buildParticles(rarity);
 
     wrap.classList.remove('show','fire');
@@ -72,7 +74,9 @@ export class AchievementPopup {
     this.ding(rarity);
 
     clearTimeout(this._autoTimer);
-    this._autoTimer = setTimeout(()=>this.dismiss(), 4600);
+    // 神话级停长一点
+    const dur = rarity==='mythic' ? 5200 : 4400;
+    this._autoTimer = setTimeout(()=>this.dismiss(), dur);
   }
 
   dismiss() {

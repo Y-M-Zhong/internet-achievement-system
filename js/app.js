@@ -3,13 +3,14 @@ import { FEED_CARDS, ACHIEVEMENTS, CATEGORY } from './data.js';
 import { Tracker } from './tracker.js';
 import { AchievementPopup } from './popup.js';
 import { Gallery } from './gallery.js';
+import { PersonaCard } from './persona.js';
 
 const $ = sel => document.querySelector(sel);
+const idx = id => String(parseInt(id.slice(1), 10)).padStart(2,'0');
 
 // -------- 渲染信息流 --------
 function renderFeed(container) {
   container.innerHTML = '';
-  // 保持 f01 在头, 其余打乱
   const head = FEED_CARDS.slice(0,1);
   const tail = [...FEED_CARDS.slice(1)].sort(()=>Math.random()-0.5);
   const cards = [...head, ...tail];
@@ -52,21 +53,33 @@ function renderFeed(container) {
   }
 }
 
-const idx = id => String(parseInt(id.slice(1), 10)).padStart(2,'0');
-
 // -------- 主流程 --------
 async function main() {
   const tracker = new Tracker();
   const popup   = new AchievementPopup($('#popupRoot'), { sound:false });
-  const gallery = new Gallery($('#galleryRoot'), tracker);
+  const persona = new PersonaCard($('#personaRoot'), tracker);
+  const gallery = new Gallery($('#galleryRoot'), tracker, {
+    onShowPersona: () => persona.showFromState(),
+  });
   popup.onShare = () => gallery.shareWall();
 
-  // unlock -> 入弹窗 + 更新计数
+  // unlock 事件: 入弹窗队列(用固化后的 desc/narrator)
   tracker.on(ev => {
-    if (ev.type === 'unlock') {
-      popup.enqueue(ev.ach);
-      updateHeaderCount();
-      bumpBrandSub(ev.ach);
+    if (ev.type !== 'unlock') return;
+    popup.enqueue({
+      ach: ev.ach,
+      desc: ev.materialized?.desc,
+      narrator: ev.materialized?.narrator,
+    });
+    updateHeaderCount();
+    bumpBrandSub(ev.ach);
+
+    // 第一个魔法时刻: 第 4 个成就解锁时, 排在弹窗之后弹出人设卡
+    const got = Object.keys(tracker.state.unlocked).length;
+    if (got >= 4 && !tracker.state.personaShown) {
+      tracker.markPersonaShown();
+      // 等 achievement popup 自动关闭后再弹
+      setTimeout(()=>{ persona.showFromState(); }, 5200);
     }
   });
 
@@ -77,7 +90,7 @@ async function main() {
     $('#headerTotal').textContent = ACHIEVEMENTS.length;
   }
 
-  // 顶部副标(动态文案)
+  // 顶部副标(动态)
   const SUBS = [
     '系统正在偷看你',
     '档案: 持续记录中',
@@ -112,7 +125,7 @@ async function main() {
     popup.setSound(on);
   });
 
-  // 渲染
+  // 渲染 feed
   renderFeed($('#feed'));
 
   // 卡片交互
@@ -143,7 +156,7 @@ async function main() {
     }
   });
 
-  // 输入框
+  // 输入框 focus/blur
   $('#feed').addEventListener('focusin', e=>{
     if (e.target.matches('[data-input]')) tracker.inputFocus();
   });
@@ -164,7 +177,7 @@ async function main() {
   }, { root: $('#feed'), threshold:[0.6, 0.85] });
   document.querySelectorAll('.feed-card').forEach(el => io.observe(el));
 
-  // swipe = 卡片换了就 +1; 同时用 scroll 大幅滚动也兜底
+  // swipe = 卡片切换
   let lastViewedId = null;
   tracker.on(ev => {
     if (ev.type === 'view_card' && ev.cardId !== lastViewedId) {
@@ -179,7 +192,7 @@ async function main() {
   updateHeaderCount();
 
   // debug
-  window.__ias = { tracker, popup, gallery };
+  window.__ias = { tracker, popup, gallery, persona };
 }
 
 // -------- toast --------

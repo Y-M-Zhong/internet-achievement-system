@@ -1,9 +1,10 @@
 // ===== 行为追踪 + 触发引擎 =====
-// 所有用户行为 → emit(event) → 更新 state → 跑 ACHIEVEMENTS 规则 → 命中即 dispatch('unlock')
-import { ACHIEVEMENTS } from './data.js';
+// 所有用户行为 → emit(event) → 更新 state → 跑 ACHIEVEMENTS 规则
+// 命中 → 立刻调用 descFn / narratorFn 拿到"基于真实数据"的文案, 固化到 unlocked 记录
+import { ACHIEVEMENTS, buildCtx, materializeDesc, materializeNarrator } from './data.js';
 
-const LS_KEY = 'ias_state_v2';
-const LONG_STAY_MS = 15_000;     // 触发 tired 链的阈值
+const LS_KEY = 'ias_state_v3';
+const LONG_STAY_MS = 15_000;
 
 function newState() {
   return {
@@ -16,13 +17,15 @@ function newState() {
     inputSendCount: 0,
     inputBlurFastCount: 0,
     totalStayMs: 0,
-    longStays: 0,                // 单次停留 ≥ LONG_STAY_MS 的次数（用于 tired 链）
-    cardViews: {},               // id -> 进入次数
-    catViews: {},                // category -> 进入次数
-    catSwitchLog: [],            // [{cat,t}] 最近 5 分钟
-    swipeLog: [],                // [t] 最近 5 秒
-    cardEnterTs: null,           // 当前卡片进入时间(放在 state 是因为成就规则要查)
-    unlocked: {},                // id -> { ts }
+    longStays: 0,
+    cardViews: {},
+    catViews: {},
+    catSwitchLog: [],
+    swipeLog: [],
+    cardEnterTs: null,
+    lastCommentCardId: null,
+    unlocked: {},      // id -> { ts, desc, narrator }
+    personaShown: false, // 第一次人设卡是否已弹出
   };
 }
 
@@ -32,6 +35,7 @@ export class Tracker {
     // 兼容旧版字段
     if (this.state.longStays == null) this.state.longStays = 0;
     if (this.state.cardEnterTs == null) this.state.cardEnterTs = null;
+    if (this.state.personaShown == null) this.state.personaShown = false;
 
     this.listeners = new Set();
     this.currentCardId = null;
@@ -42,15 +46,13 @@ export class Tracker {
   on(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
   emit(ev) { this.listeners.forEach(fn => fn(ev)); }
 
-  save() {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(this.state)); } catch {}
-  }
+  save() { try { localStorage.setItem(LS_KEY, JSON.stringify(this.state)); } catch {} }
   load() {
     try {
       const raw = localStorage.getItem(LS_KEY);
       if (!raw) return null;
       const s = JSON.parse(raw);
-      // 重启会话级字段(保留解锁记录)
+      // 会话级字段重置 (保留解锁记录)
       s.startTs = Date.now();
       s.catSwitchLog = [];
       s.swipeLog = [];
@@ -61,16 +63,41 @@ export class Tracker {
   reset() { this.state = newState(); this.save(); this.emit({ type:'reset' }); }
 
   // ---------- 行为入口 ----------
-  init()        { this.dispatch({ type:'init' }); }
-  swipe()       { this.state.swipes++; this.state.swipeLog.push(Date.now()); this.trimRecent(); this.dispatch({ type:'swipe' }); }
-  like()        { this.state.likes++;  this.dispatch({ type:'like' }); }
-  save_()       { this.state.saves++;  this.dispatch({ type:'save' }); }
-  commentOpen() { this.state.commentOpens++; this.dispatch({ type:'comment_open' }); }
-  inputFocus()  { this.state.inputFocusCount++; this.lastInputFocusTs = Date.now(); this.dispatch({ type:'input_focus' }); }
+  init() { this.dispatch({ type:'init' }); }
+
+  swipe() {
+    this.state.swipes++;
+    this.state.swipeLog.push(Date.now());
+    this.trimRecent();
+    this.dispatch({ type:'swipe' });
+  }
+
+  like() {
+    this.state.likes++;
+    this.dispatch({ type:'like', cardId: this.currentCardId, cat: this.currentCat });
+  }
+
+  save_() {
+    this.state.saves++;
+    this.dispatch({ type:'save', cardId: this.currentCardId, cat: this.currentCat });
+  }
+
+  commentOpen() {
+    this.state.commentOpens++;
+    this.state.lastCommentCardId = this.currentCardId;
+    this.dispatch({ type:'comment_open', cardId: this.currentCardId, cat: this.currentCat });
+  }
+
+  inputFocus() {
+    this.state.inputFocusCount++;
+    this.lastInputFocusTs = Date.now();
+    this.dispatch({ type:'input_focus', cardId: this.currentCardId, cat: this.currentCat });
+  }
+
   inputBlur(sent) {
     if (sent) this.state.inputSendCount++;
     else if (Date.now() - this.lastInputFocusTs < 1500) this.state.inputBlurFastCount++;
-    this.dispatch({ type:'input_blur', sent });
+    this.dispatch({ type:'input_blur', sent, cardId: this.currentCardId });
   }
 
   viewCard(card) {
@@ -92,16 +119,16 @@ export class Tracker {
     this.state.cardEnterTs = Date.now();
     this.state.cardViews[card.id] = (this.state.cardViews[card.id]||0) + 1;
     this.state.catViews[card.cat] = (this.state.catViews[card.cat]||0) + 1;
-    this.state.catSwitchLog.push({ cat: card.cat, t: Date.now() });
+    this.state.catSwitchLog.push({ cat: card.cat, t: Date.now(), cardId: card.id });
     this.trimRecent();
     this.dispatch({ type:'view_card', cardId: card.id, cat: card.cat });
   }
 
   trimRecent() {
     const cut = Date.now() - 5*60_000;
-    this.state.catSwitchLog = this.state.catSwitchLog.filter(x=>x.t>=cut);
+    this.state.catSwitchLog = this.state.catSwitchLog.filter(x => x.t >= cut);
     const cutSwipe = Date.now() - 5_000;
-    this.state.swipeLog = this.state.swipeLog.filter(t=>t>=cutSwipe);
+    this.state.swipeLog = this.state.swipeLog.filter(t => t >= cutSwipe);
   }
 
   // ---------- 派发到规则引擎 ----------
@@ -116,16 +143,30 @@ export class Tracker {
         if (blocked) continue;
       }
       try {
-        if (ach.check(this.state, ev)) this.unlock(ach);
+        if (ach.check(this.state, ev)) this.unlock(ach, ev);
       } catch {}
     }
     this.save();
   }
 
-  unlock(ach) {
+  // 解锁的瞬间立即把"基于真实数据"的文案固化下来
+  unlock(ach, ev) {
     if (this.state.unlocked[ach.id]) return;
-    this.state.unlocked[ach.id] = { ts: Date.now() };
-    this.emit({ type:'unlock', ach });
+    const ctx = buildCtx(this.state);
+    const desc     = materializeDesc(ach, this.state, ev, ctx);
+    const narrator = materializeNarrator(ach, this.state, ev, ctx);
+    this.state.unlocked[ach.id] = {
+      ts: Date.now(),
+      desc,
+      narrator,
+    };
+    this.emit({ type:'unlock', ach, materialized:{ desc, narrator } });
+    this.save();
+  }
+
+  // 标记人设卡已弹出, 避免重复打扰
+  markPersonaShown() {
+    this.state.personaShown = true;
     this.save();
   }
 
