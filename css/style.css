@@ -958,32 +958,76 @@ body {
 .pe-band::before { left:0; }
 .pe-band::after  { right:0; }
 
-/* 大标签 */
-.pe-label {
-  padding:24px 8px;
-  font-family:var(--display-2);
-  font-size:32px; line-height:1.2;
+/* 行为人格主区块 */
+.pe-behavior {
+  padding:20px 8px 16px;
   text-align:center;
+}
+.pe-bp-icon {
+  font-size:36px;
+  line-height:1;
+  margin-bottom:6px;
+}
+.pe-bp-code {
+  font-family:var(--mono);
+  font-size:40px;
+  font-weight:900;
+  letter-spacing:.15em;
+  color:var(--rare-m);
+  line-height:1;
+  margin-bottom:8px;
+  transition:color .3s;
+}
+.pe-bp-code.pe-bp-combo {
+  font-size:28px;
+  letter-spacing:.08em;
+}
+.pe-bp-name {
+  font-family:var(--display-2);
+  font-size:22px;
   color:var(--ink);
-  text-shadow:0 2px 30px rgba(232,169,29,.2);
-  display:flex; flex-wrap:wrap; justify-content:center; gap:8px;
+  margin-bottom:8px;
+  font-weight:700;
+}
+.pe-bp-tag {
+  font-family:var(--serif);
+  font-size:12.5px;
+  color:var(--muted);
+  font-style:italic;
+  line-height:1.5;
+  padding:0 12px;
+}
+
+/* 成就标签 (次要，缩小展示) */
+.pe-label {
+  padding:10px 8px 0;
+  font-family:var(--display-2);
+  font-size:17px; line-height:1.4;
+  text-align:center;
+  color:var(--ink-soft);
+  display:flex; flex-wrap:wrap; justify-content:center; gap:6px;
   align-items:center;
 }
-.pe-slug-0 { color:var(--ink); }
-.pe-slug-1 { color:var(--rare-m); }
+.pe-slug-0 { color:var(--ink-soft); }
+.pe-slug-1 { color:#8a5fff; }
 .pe-dot {
-  color:rgba(255,255,255,.3);
-  font-size:24px;
+  color:rgba(255,255,255,.2);
+  font-size:14px;
 }
 
 /* 副标 */
 .pe-line {
-  margin-top:12px;
+  margin-top:10px;
   font-family:var(--serif);
-  font-size:13.5px; color:var(--ink-soft);
+  font-size:13px; color:var(--ink-soft);
   text-align:center; line-height:1.6;
   padding:0 6px;
   font-style:italic;
+}
+.pe-line b {
+  color:var(--rare-m);
+  font-weight:700;
+  font-style:normal;
 }
 
 /* 来源 */

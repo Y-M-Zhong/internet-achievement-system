@@ -562,19 +562,163 @@ export function getArchetype(s) {
   return { label:'还在观察中', sub:'再刷一会儿, 才知道你是谁' };
 }
 
+// ===== 互联网行为人格 · 14种 =====
+export const BEHAVIOR_PERSONAS = {
+  GHOST:  { name:'数字幽灵',   tagline:'我来过，但算法对此一无所知',            icon:'👻', rate:'14.2%', rarity:'epic'   },
+  SPIN:   { name:'永动机',     tagline:'我不是在刷视频，我是在给手指散步',      icon:'⚙️', rate:'22.7%', rarity:'rare'   },
+  STASH:  { name:'仓鼠党',     tagline:'收藏=已学会，这是一种自欺欺人的艺术',   icon:'🐹', rate:'31.4%', rarity:'rare'   },
+  DARK:   { name:'深渊哲学家', tagline:'白天是打工人，深夜是思想家',            icon:'🌑', rate:'8.7%',  rarity:'rare'   },
+  FLIP:   { name:'精神分裂者', tagline:'我的主页是一个自相矛盾的宇宙',          icon:'🔀', rate:'19.3%', rarity:'rare'   },
+  CAGE:   { name:'算法囚徒',   tagline:'我以为是我在选内容',                    icon:'🔒', rate:'28.6%', rarity:'common' },
+  CLICK:  { name:'无情点赞机', tagline:'我的大拇指不经过大脑',                  icon:'👍', rate:'34.1%', rarity:'common' },
+  SKIP:   { name:'五秒侠',     tagline:'不合我意，消失',                        icon:'💨', rate:'26.9%', rarity:'common' },
+  MONK:   { name:'间歇出家人', tagline:'我回来了，宽宏大量地原谅算法吧',        icon:'🧘', rate:'11.8%', rarity:'rare'   },
+  LOOP:   { name:'复读强迫症', tagline:'第18遍了，这次一定看出新东西',          icon:'🔁', rate:'9.6%',  rarity:'rare'   },
+  SPY:    { name:'评论区卧底', tagline:'我在评论区里，但你找不到我',            icon:'🕵️', rate:'17.4%', rarity:'rare'   },
+  SPONGE: { name:'情绪海绵',   tagline:'每条视频都在精准狙击我',                icon:'🌊', rate:'13.5%', rarity:'epic'   },
+  FAKE:   { name:'学习表演家', tagline:'收藏了=学了，逻辑上没有问题',           icon:'🎭', rate:'24.8%', rarity:'rare'   },
+  VOID:   { name:'数字黑洞',   tagline:'系统已放弃为我建立画像',                icon:'🕳️', rate:'3.2%',  rarity:'mythic' },
+};
+
+// ===== 组合人格 · 4种稀有彩蛋 =====
+export const BEHAVIOR_PERSONA_COMBOS = [
+  { codes:['DARK','GHOST'],  code:'DARK·GHOST',  name:'深夜幽灵',          tagline:'凌晨的隐形人，来过却无迹可寻',           icon:'🌙', rate:'1.8%', rarity:'mythic' },
+  { codes:['STASH','FAKE'],  code:'STASH·FAKE',  name:'收藏大师·纸上谈兵', tagline:'全收藏但全没看完，学习届最强幻觉',         icon:'📦', rate:'2.3%', rarity:'mythic' },
+  { codes:['SPIN','CLICK'],  code:'SPIN·CLICK',  name:'无差别点赞机',      tagline:'快滑+乱赞，算法已放弃判断你的品味',        icon:'⚡', rate:'1.4%', rarity:'mythic' },
+  { codes:['CAGE','LOOP'],   code:'CAGE·LOOP',   name:'算法深渊居民',      tagline:'同一个坑，掉了又掉，算法给你盖章了',        icon:'🕳️', rate:'0.9%', rarity:'mythic' },
+];
+
+// ===== 行为人格检测 =====
+export function detectBehaviorPersonas(state) {
+  const s = state;
+  const h = new Date().getHours();
+  const isDark = h >= 23 || h <= 4;
+  const cv = s.catViews || {};
+  const catKeys = Object.keys(cv);
+  const totalViews = catKeys.reduce((sum, k) => sum + (cv[k] || 0), 0);
+
+  const topCatEntry = catKeys
+    .map(k => [k, cv[k] || 0])
+    .sort((a, b) => b[1] - a[1])[0];
+  const topCatRatio = totalViews > 0 && topCatEntry ? topCatEntry[1] / totalViews : 0;
+
+  const avgStay    = (s.swipes || 0) > 0 ? s.totalStayMs / s.swipes : 0;
+  const totalInter = (s.likes || 0) + (s.saves || 0) + (s.commentOpens || 0);
+  const cardVals   = Object.values(s.cardViews || {});
+  const maxViews   = cardVals.length > 0 ? Math.max(...cardVals) : 0;
+
+  const matched = [];
+
+  // GHOST: 刷了但零互动
+  if ((s.swipes || 0) >= 6 && totalInter === 0)
+    matched.push('GHOST');
+
+  // SPIN: 高速刷动，停留极短
+  if ((s.swipes || 0) >= 12 && avgStay > 0 && avgStay < 3000)
+    matched.push('SPIN');
+
+  // STASH: 收藏远多于点赞
+  if ((s.saves || 0) >= 3 && (s.saves || 0) > (s.likes || 0) * 2)
+    matched.push('STASH');
+
+  // DARK: 深夜 + 看哲学/情感内容
+  if (isDark && (cv.philosophy || 0) >= 1)
+    matched.push('DARK');
+
+  // FLIP: 内容品类矛盾共存
+  const hasContradiction =
+    ((cv.food || 0) >= 1     && (cv.fitness || 0) >= 1) ||
+    ((cv.philosophy || 0) >= 1 && (cv.fitness || 0) >= 1) ||
+    ((cv.philosophy || 0) >= 1 && (cv.shopping || 0) >= 1) ||
+    ((cv.study || 0) >= 1    && (cv.game || 0) >= 1) ||
+    ((cv.finance || 0) >= 1  && (cv.game || 0) >= 1);
+  if (hasContradiction && catKeys.length >= 4)
+    matched.push('FLIP');
+
+  // CAGE: 一个品类高度集中
+  if ((s.swipes || 0) >= 5 && topCatRatio >= 0.65 && catKeys.length >= 2)
+    matched.push('CAGE');
+
+  // CLICK: 高点赞率，几乎不收藏
+  if ((s.likes || 0) >= 4 && (s.saves || 0) <= 1)
+    matched.push('CLICK');
+
+  // SKIP: 滑得快，停留短
+  if ((s.swipes || 0) >= 10 && avgStay > 0 && avgStay < 2500)
+    matched.push('SKIP');
+
+  // LOOP: 同一内容反复看
+  if (maxViews >= 3)
+    matched.push('LOOP');
+
+  // SPY: 长时间刷但从不开评论
+  if ((s.swipes || 0) >= 8 && (s.commentOpens || 0) === 0 && s.totalStayMs >= 20_000)
+    matched.push('SPY');
+
+  // SPONGE: 情感内容 + 多收藏
+  const emotionViews = (cv.philosophy || 0) + (cv.music || 0);
+  if (emotionViews >= 2 && (s.saves || 0) >= 2)
+    matched.push('SPONGE');
+
+  // FAKE: 收藏了学习内容但停留极短（没看完）
+  const studyViews = (cv.study || 0) + (cv.finance || 0);
+  if ((s.saves || 0) >= 2 && studyViews >= 1 && avgStay > 0 && avgStay < 6000)
+    matched.push('FAKE');
+
+  // VOID: 品类分散到无法归类
+  if (catKeys.length >= 8)
+    matched.push('VOID');
+
+  // 按趣味度/稀有度排序，优先展示最有代表性的类型
+  const PRIORITY = {
+    VOID:10, GHOST:9, SPONGE:8, DARK:8,
+    LOOP:7,  SKIP:7,  FLIP:6,   SPIN:5,
+    STASH:5, SPY:5,   FAKE:5,   CLICK:4,
+    CAGE:3,  MONK:2,
+  };
+  matched.sort((a, b) => (PRIORITY[b] || 0) - (PRIORITY[a] || 0));
+
+  return matched;
+}
+
+// ===== 组合检测 =====
+export function detectPersonaCombo(codes) {
+  for (const combo of BEHAVIOR_PERSONA_COMBOS) {
+    if (combo.codes.every(c => codes.includes(c))) return combo;
+  }
+  return null;
+}
+
 // ===== 人设组合 =====
-// 输入: 已解锁的 ach 列表
-// 输出: { slugs:['量子学习者','深夜哲学家'], label:'量子学习者 · 深夜哲学家', rate:'2.6%', sources:[ach,ach] }
-export function buildPersona(unlockedList) {
+// 输入: 已解锁的 ach 列表 + 当前 state (可选)
+// 输出: { slugs, label, rate, sources, behavior? }
+export function buildPersona(unlockedList, state = null) {
   const eligible = unlockedList
     .filter(a => (a.personaWeight||0) > 0 && a.personaSlug)
     .sort((a,b)=> (b.personaWeight - a.personaWeight) || (parseFloat(a.rate) - parseFloat(b.rate)));
-  if (eligible.length === 0) return null;
   const picks = eligible.slice(0, Math.min(2, eligible.length));
   const slugs = picks.map(p => p.personaSlug);
   const label = slugs.join(' · ');
   const rate = comboRate(picks);
-  return { slugs, label, rate, sources: picks };
+
+  // 行为人格检测
+  let behavior = null;
+  if (state) {
+    const codes  = detectBehaviorPersonas(state);
+    const combo  = detectPersonaCombo(codes);
+    if (combo) {
+      behavior = { code: combo.code, name: combo.name, tagline: combo.tagline,
+                   icon: combo.icon, rate: combo.rate, rarity: combo.rarity, isCombo: true };
+    } else if (codes.length > 0) {
+      const meta = BEHAVIOR_PERSONAS[codes[0]];
+      behavior = { code: codes[0], name: meta?.name, tagline: meta?.tagline,
+                   icon: meta?.icon, rate: meta?.rate, rarity: meta?.rarity, isCombo: false };
+    }
+  }
+
+  if (picks.length === 0 && !behavior) return null;
+
+  return { slugs, label, rate, sources: picks, behavior };
 }
 
 function comboRate(picks) {

@@ -15,7 +15,7 @@ export class PersonaCard {
   // 根据当前 unlocked 计算并展示
   showFromState() {
     const list = ACHIEVEMENTS.filter(a => this.tracker.state.unlocked[a.id]);
-    this.persona = buildPersona(list);
+    this.persona = buildPersona(list, this.tracker.state);
     if (!this.persona) return false;
     this.paint();
     this.el.classList.add('show');
@@ -28,19 +28,46 @@ export class PersonaCard {
     const p = this.persona;
     if (!p) return;
 
-    // 顶部标签 + 时间
+    // 顶部日期
     this.elDate.textContent = formatDate();
 
-    // 标签拼接 (slug · slug)
-    this.elLabel.innerHTML = p.slugs.map((s,i) =>
-      `<span class="pe-slug pe-slug-${i}">${s}</span>${i<p.slugs.length-1 ? '<span class="pe-dot">·</span>' : ''}`
-    ).join('');
+    // ── 行为人格区块 ──
+    const rarityColor = { common:'#4f7be8', rare:'#a85fff', epic:'#26c277', mythic:'#e8a91d' };
+    if (p.behavior) {
+      const col = rarityColor[p.behavior.rarity] || '#e8a91d';
+      this.elBehavior.style.display = '';
+      this.elBpIcon.textContent   = p.behavior.icon || '';
+      this.elBpCode.textContent   = p.behavior.code;
+      this.elBpCode.style.color   = col;
+      this.elBpCode.style.textShadow = `0 0 40px ${col}66`;
+      this.elBpName.textContent   = p.behavior.name;
+      this.elBpTag.textContent    = `"${p.behavior.tagline}"`;
+      if (p.behavior.isCombo) this.elBpCode.classList.add('pe-bp-combo');
+      else this.elBpCode.classList.remove('pe-bp-combo');
+    } else {
+      this.elBehavior.style.display = 'none';
+    }
 
-    // 副标
+    // ── 成就标签拼接（次要展示） ──
+    if (p.slugs.length > 0) {
+      this.elLabel.style.display = '';
+      this.elLabel.innerHTML = p.slugs.map((s,i) =>
+        `<span class="pe-slug pe-slug-${i}">${s}</span>${i<p.slugs.length-1 ? '<span class="pe-dot">·</span>' : ''}`
+      ).join('');
+    } else {
+      this.elLabel.style.display = 'none';
+    }
+
+    // ── 副标（概率行） ──
     const totalUnlocked = Object.keys(this.tracker.state.unlocked).length;
-    this.elLine.textContent = `解锁了 ${totalUnlocked} 个荒诞成就 · 全球仅 ${p.rate} 用户得到这个组合`;
+    if (p.behavior) {
+      this.elLine.innerHTML =
+        `全球约 <b>${p.behavior.rate}</b> 的用户属于这个类型 · 你解锁了 <b>${totalUnlocked}</b> 个荒诞成就`;
+    } else {
+      this.elLine.textContent = `解锁了 ${totalUnlocked} 个荒诞成就 · 全球仅 ${p.rate} 用户得到这个组合`;
+    }
 
-    // 来源成就 icons
+    // ── 来源成就 ──
     this.elSources.innerHTML = p.sources.map(a => {
       const meta = RARITY[a.rarity];
       return `
@@ -52,7 +79,7 @@ export class PersonaCard {
       `;
     }).join('');
 
-    // 行为摘要
+    // ── 行为摘要 ──
     const s = this.tracker.state;
     const min = Math.floor((Date.now()-s.startTs)/60_000);
     this.elSummary.innerHTML = `
@@ -77,13 +104,21 @@ export class PersonaCard {
             <div class="pe-date" id="peDate">—</div>
           </div>
 
-          <!-- 大标签区 -->
+          <!-- 行为人格区块 (主要) -->
           <div class="pe-band pe-band-top"></div>
-          <div class="pe-label" id="peLabel">—</div>
+          <div class="pe-behavior" id="peBehavior">
+            <div class="pe-bp-icon" id="peBpIcon"></div>
+            <div class="pe-bp-code" id="peBpCode">—</div>
+            <div class="pe-bp-name" id="peBpName">—</div>
+            <div class="pe-bp-tag" id="peBpTag">—</div>
+          </div>
           <div class="pe-band pe-band-bot"></div>
 
           <!-- 副标 -->
           <div class="pe-line" id="peLine">—</div>
+
+          <!-- 成就标签 (次要) -->
+          <div class="pe-label" id="peLabel"></div>
 
           <!-- 来源成就 -->
           <div class="pe-sources" id="peSources"></div>
@@ -102,6 +137,11 @@ export class PersonaCard {
       </div>
     `;
     this.el         = this.root.querySelector('#pe');
+    this.elBehavior = this.root.querySelector('#peBehavior');
+    this.elBpIcon   = this.root.querySelector('#peBpIcon');
+    this.elBpCode   = this.root.querySelector('#peBpCode');
+    this.elBpName   = this.root.querySelector('#peBpName');
+    this.elBpTag    = this.root.querySelector('#peBpTag');
     this.elLabel    = this.root.querySelector('#peLabel');
     this.elLine     = this.root.querySelector('#peLine');
     this.elDate     = this.root.querySelector('#peDate');
@@ -155,29 +195,74 @@ export class PersonaCard {
     g.strokeStyle = '#3a3a48'; g.lineWidth = 1;
     g.beginPath(); g.moveTo(48, 280); g.lineTo(W-48, 280); g.stroke();
 
-    // 巨大拼接标签 (居中)
-    drawPersonaLabel(g, p.slugs, W/2, 470, W-96);
+    // ── 行为人格区块 ──
+    const rarityColor = { common:'#4f7be8', rare:'#a85fff', epic:'#26c277', mythic:'#e8a91d' };
+    if (p.behavior) {
+      const bCol = rarityColor[p.behavior.rarity] || '#e8a91d';
+
+      // icon
+      g.font = '52px sans-serif';
+      centerText(g, p.behavior.icon || '', W/2, 370);
+
+      // 代号 (大)
+      g.fillStyle = bCol;
+      const codeText = p.behavior.code;
+      let codeFontSize = 72;
+      g.font = `bold ${codeFontSize}px "DM Mono", monospace`;
+      while (g.measureText(codeText).width > W - 96 && codeFontSize > 36) {
+        codeFontSize -= 4;
+        g.font = `bold ${codeFontSize}px "DM Mono", monospace`;
+      }
+      centerText(g, codeText, W/2, 460);
+
+      // 人格名
+      g.fillStyle = '#f5f3ec';
+      g.font = '36px "ZCOOL KuaiLe", "Noto Serif SC", serif';
+      centerText(g, p.behavior.name, W/2, 520);
+
+      // tagline
+      g.fillStyle = '#8a8d99';
+      g.font = 'italic 20px "Noto Serif SC", serif';
+      centerText(g, `"${p.behavior.tagline}"`, W/2, 568);
+    } else {
+      // 无行为人格时，回退到成就标签大字
+      drawPersonaLabel(g, p.slugs, W/2, 470, W-96);
+    }
 
     // 下装饰线
-    g.beginPath(); g.moveTo(48, 660); g.lineTo(W-48, 660); g.stroke();
+    g.beginPath(); g.moveTo(48, 610); g.lineTo(W-48, 610); g.stroke();
 
     // 副标 (居中)
     const s = this.tracker.state;
     const totalUnlocked = Object.keys(s.unlocked).length;
-    g.fillStyle = '#e8a91d';
-    g.font = 'bold 22px "DM Mono", monospace';
-    centerText(g, `${p.rate}`, W/2, 720);
+    if (p.behavior) {
+      g.fillStyle = '#e8a91d';
+      g.font = 'bold 22px "DM Mono", monospace';
+      centerText(g, `${p.behavior.rate}`, W/2, 664);
 
-    g.fillStyle = '#cfd0d6';
-    g.font = '18px "Noto Serif SC", serif';
-    centerText(g, `全球用户得到这个组合的概率`, W/2, 752);
+      g.fillStyle = '#cfd0d6';
+      g.font = '18px "Noto Serif SC", serif';
+      centerText(g, `全球用户属于这个类型的概率`, W/2, 698);
 
-    g.fillStyle = '#8a8d99';
-    g.font = '15px "Noto Serif SC", serif';
-    centerText(g, `· 你解锁了 ${totalUnlocked} 个荒诞成就 ·`, W/2, 784);
+      g.fillStyle = '#8a8d99';
+      g.font = '15px "Noto Serif SC", serif';
+      centerText(g, `· 你解锁了 ${totalUnlocked} 个荒诞成就 ·`, W/2, 730);
+    } else {
+      g.fillStyle = '#e8a91d';
+      g.font = 'bold 22px "DM Mono", monospace';
+      centerText(g, `${p.rate}`, W/2, 664);
+
+      g.fillStyle = '#cfd0d6';
+      g.font = '18px "Noto Serif SC", serif';
+      centerText(g, `全球用户得到这个组合的概率`, W/2, 698);
+
+      g.fillStyle = '#8a8d99';
+      g.font = '15px "Noto Serif SC", serif';
+      centerText(g, `· 你解锁了 ${totalUnlocked} 个荒诞成就 ·`, W/2, 730);
+    }
 
     // 来源 cards (居中两个)
-    drawSources(g, p.sources, W, 840);
+    drawSources(g, p.sources, W, 780);
 
     // 行为摘要
     const min = Math.floor((Date.now()-s.startTs)/60_000);
