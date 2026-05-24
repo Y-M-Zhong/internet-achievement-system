@@ -167,12 +167,35 @@ export function buildPrompt(persona, dims, state, styleKey, behavior = null) {
 // 切换开关:
 const USE_REAL_API = false;
 
+// 预生成的 gpt-image-2 画像 (zine 风格)
+// 行为人格命中时优先展示真图, 没命中 / 切到其他风格 → 回落到本地 SVG 印章
+const PRESET_PORTRAITS = {
+  DARK:  'asserts/portraits/dark.png',
+  SPY:   'asserts/portraits/spy.png',
+  GHOST: 'asserts/portraits/ghost.png',
+  SPIN:  'asserts/portraits/spin.png',
+  STASH: 'asserts/portraits/stash.png',
+  VOID:  'asserts/portraits/void.png',
+};
+
 // ---------- 入口: 生成画像 ----------
 export async function generatePortrait({ persona, dims, state, style: styleKey = 'zine', seed = Math.random(), behavior = null } = {}) {
-  const prompt = buildPrompt(persona, dims, state, styleKey, behavior || persona?.behavior || null);
+  const beh = behavior || persona?.behavior || null;
+  const prompt = buildPrompt(persona, dims, state, styleKey, beh);
 
+  // 1) zine 风格 + 命中预生成的人格 → 用真图 (gpt-image-2 离线产物)
+  const presetUrl = (styleKey === 'zine' && beh && PRESET_PORTRAITS[beh.code]) || null;
+  if (presetUrl) {
+    return {
+      kind: 'api',
+      svg: `<img src="${presetUrl}" class="pe-portrait-img" alt="${beh.code} persona portrait" loading="eager" />`,
+      prompt,
+      style: styleKey,
+    };
+  }
+
+  // 2) 真接口路径 (未来切到在线 gpt-image-2 时启用)
   if (USE_REAL_API) {
-    // ↓↓↓ 接 gpt-image-2 时把下面注释打开, 删掉 throw
     // const res = await fetch('/api/portrait', {
     //   method:'POST', headers:{'Content-Type':'application/json'},
     //   body: JSON.stringify({ prompt, size:'1024x1024' }),
@@ -182,7 +205,7 @@ export async function generatePortrait({ persona, dims, state, style: styleKey =
     throw new Error('Real API not wired yet');
   }
 
-  // 默认: 本地"印章人像"
+  // 3) fallback: 本地"印章人像" (其他风格 / 未命中预生成集合)
   const svg = buildStampPortrait(persona, dims, state, styleKey, seed);
   return { kind:'stamp', svg, prompt, style: styleKey };
 }
